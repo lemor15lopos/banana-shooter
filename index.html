@@ -17,7 +17,7 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            padding: 20px;
+            padding: 10px; /* Menos padding en móvil */
         }
 
         #game-container {
@@ -28,7 +28,6 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            /* Limitar el ancho para que el juego se vea bien en pantallas grandes */
             max-width: 600px; 
             width: 100%;
         }
@@ -37,6 +36,9 @@
             background-color: #2c3e50; /* Color de fondo del juego */
             display: block;
             border: 4px solid #f39c12; /* Borde naranja llamativo */
+            /* Hacer que el canvas ocupe todo el ancho disponible del contenedor */
+            width: 100%; 
+            height: auto; /* Mantener la proporción */
         }
 
         /* Estilo para la barra de vida */
@@ -70,13 +72,15 @@
         .button-control {
             background-color: #f39c12;
             color: #1a1a2e;
-            padding: 8px 16px;
+            padding: 12px 24px; /* Botones más grandes */
             border-radius: 8px;
             font-weight: bold;
             cursor: pointer;
             transition: background-color 0.2s, transform 0.1s;
             box-shadow: 0 4px #e67e22;
-            user-select: none; /* Previene la selección de texto al tocar */
+            user-select: none;
+            flex-grow: 1; /* Para que los botones se repartan el espacio */
+            margin: 5px;
         }
 
         .button-control:hover {
@@ -87,117 +91,88 @@
             transform: translateY(2px);
             box-shadow: 0 2px #e67e22;
         }
-
-        /* Estilo para el mensaje de Power-Up */
-        #powerup-display {
-            font-size: 1rem;
-            font-weight: bold;
-            color: #2ecc71;
-            padding: 5px 10px;
-            border-radius: 5px;
-            background-color: rgba(46, 204, 113, 0.2);
-            transition: all 0.5s;
+        
+        /* Controles específicos para el móvil (direccionales y disparo) */
+        #mobile-controls {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            padding: 10px 0;
+            background-color: #1a1a2e; /* Color oscuro para el fondo de los controles */
         }
         
-        /* Estilo para el mensaje de Power-Up de notificación */
-        #powerup-message {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            padding: 15px 30px;
-            background-color: #f39c12;
-            color: #1a1a2e;
-            border-radius: 10px;
-            font-size: 2rem;
-            font-weight: 900;
-            box-shadow: 0 0 20px #f39c12;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.5s;
-            z-index: 10;
+        #directional-controls {
+            display: flex;
+            flex-direction: column;
+            width: 35%; /* Ocupar menos espacio que el botón de disparo */
+        }
+        
+        #shoot-control-container {
+            width: 60%; 
         }
 
-        /* Pantalla de Elección de Power-Up (Modal) */
-        #powerup-choice-screen {
-            position: absolute;
+        /* Estilos de Power-Up y Game Over (se mantienen igual) */
+        #powerup-message, #powerup-choice-screen, #game-over-screen {
+            /* Asegurar que las pantallas modales se escalen correctamente con el contenedor */
+            position: absolute; 
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.9);
-            color: white;
-            display: none; /* Oculto por defecto */
+            /* Propiedades para centrar y estilizar los modales */
+            display: none; /* Por defecto están ocultos */
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            text-align: center;
-            z-index: 20;
-            border-radius: 12px;
-            padding: 20px;
-        }
-
-        #powerup-choice-screen h2 {
-            font-size: 2.5rem;
-            color: #2ecc71;
-            margin-bottom: 20px;
-        }
-
-        .choice-button {
-            margin: 10px;
-            padding: 12px 24px;
-            font-size: 1.2rem;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .choice-accept {
-            background-color: #2ecc71; /* Verde */
-            color: white;
-            box-shadow: 0 4px #27ae60;
-        }
-
-        .choice-accept:hover { background-color: #27ae60; }
-        .choice-accept:active { transform: translateY(2px); box-shadow: 0 2px #27ae60; }
-
-        .choice-reject {
-            background-color: #e74c3c; /* Rojo */
-            color: white;
-            box-shadow: 0 4px #c0392b;
-        }
-        
-        .choice-reject:hover { background-color: #c0392b; }
-        .choice-reject:active { transform: translateY(2px); box-shadow: 0 2px #c0392b; }
-
-
-        /* Estilo para el mensaje de Game Over */
-        #game-over-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
             background-color: rgba(0, 0, 0, 0.85);
             color: white;
-            display: none; /* Se oculta por defecto */
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            padding: 20px;
             text-align: center;
             z-index: 10;
             border-radius: 12px;
         }
-        #game-over-screen h1 {
-            font-size: 3rem;
-            color: #e74c3c;
-            margin-bottom: 20px;
-        }
-        #final-score {
+
+        #powerup-message {
+            opacity: 0;
+            transition: opacity 0.5s;
             font-size: 1.5rem;
-            margin-bottom: 30px;
-            color: #f39c12;
+            background-color: rgba(243, 156, 18, 0.9);
+            color: #1a1a2e;
+            height: 50px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            top: 20px;
+            width: 80%;
+            left: 50%;
+            transform: translateX(-50%);
+            pointer-events: none; /* No bloquear clicks */
+            position: absolute; /* Usamos position absolute para que se superponga */
+        }
+
+        /* Ajustes para el botón de disparo en móvil */
+        #shootButton {
+            width: 100%;
+            height: 100%;
+            min-height: 80px; /* Altura mínima para un buen objetivo táctil */
+            background-color: #c0392b; /* Rojo para disparar */
+            box-shadow: 0 4px #a93226;
+        }
+        #shootButton:hover {
+            background-color: #a93226;
+        }
+        #shootButton:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px #a93226;
+        }
+
+        /* Ocultar controles de móvil en pantallas grandes */
+        @media (min-width: 768px) {
+            #mobile-controls {
+                display: none !important;
+            }
         }
     </style>
 </head>
@@ -213,29 +188,42 @@
     <!-- Mensaje de Power-Up de notificación -->
     <div id="powerup-message">POWER UP OBTENIDO!</div>
 
-    <!-- Pantalla de Elección de Power-Up -->
+    <!-- Pantalla de Elección de Power-Up (Modal) -->
     <div id="powerup-choice-screen">
-        <h2>¡Power-Up Disponible!</h2>
+        <h2 class="text-3xl font-bold mb-4">¡Power-Up Disponible!</h2>
         <p class="text-xl mb-4">¿Deseas reemplazar tu Power-Up actual (<span id="current-powerup-name" class="font-bold text-yellow-400">Sin Power-Up</span>) por:</p>
-        <p class="text-2xl mb-8 font-extrabold text-white" id="new-powerup-name"></p>
+        <p class="text-3xl mb-8 font-extrabold text-white" id="new-powerup-name"></p>
         
         <div class="flex space-x-4">
-            <button id="acceptPowerup" class="choice-button choice-accept">Aceptar</button>
-            <button id="rejectPowerup" class="choice-button choice-reject">Rechazar (Mantener el actual)</button>
+            <button id="acceptPowerup" class="choice-button button-control choice-accept">Aceptar</button>
+            <button id="rejectPowerup" class="choice-button button-control choice-reject">Rechazar (Mantener actual)</button>
         </div>
     </div>
 
     <div id="game-over-screen">
-        <h1>¡JUEGO TERMINADO!</h1>
-        <p id="final-score">Puntuación Final: 0</p>
+        <h1 class="text-4xl font-black mb-4">¡JUEGO TERMINADO!</h1>
+        <p id="final-score" class="text-2xl mb-6">Puntuación Final: 0</p>
         <button id="restartButton" class="button-control">Jugar de Nuevo</button>
     </div>
 
     <div class="game-ui">
         <span id="scoreDisplay" class="text-lg">Puntuación: 0</span>
         <span id="powerup-display">Sin Power-Up</span>
-        <!-- Botón visible en dispositivos pequeños para disparar -->
-        <button id="shootButton" class="button-control md:hidden">Disparar 🍌</button>
+    </div>
+    
+    <!-- NUEVOS CONTROLES MÓVILES DEDICADOS -->
+    <div id="mobile-controls">
+        
+        <!-- Botones de movimiento (Arriba/Abajo) -->
+        <div id="directional-controls">
+            <button id="upButton" class="button-control">▲ Arriba</button>
+            <button id="downButton" class="button-control">▼ Abajo</button>
+        </div>
+
+        <!-- Botón de disparo -->
+        <div id="shoot-control-container">
+            <button id="shootButton" class="button-control">Disparar 🍌</button>
+        </div>
     </div>
 </div>
 
@@ -243,7 +231,6 @@
 <script>
     // --- Game Logic ---
     const canvas = document.getElementById('gameCanvas');
-    // Ensure canvas and context are obtained correctly
     if (!canvas) {
         console.error("Canvas element not found.");
     }
@@ -253,7 +240,12 @@
     const gameOverScreen = document.getElementById('game-over-screen');
     const finalScoreDisplay = document.getElementById('final-score');
     const restartButton = document.getElementById('restartButton');
+    
+    // Referencias a los nuevos botones
+    const upButton = document.getElementById('upButton');
+    const downButton = document.getElementById('downButton');
     const shootButton = document.getElementById('shootButton'); 
+
     const powerupDisplay = document.getElementById('powerup-display');
     const powerupMessage = document.getElementById('powerup-message');
     const powerupChoiceScreen = document.getElementById('powerup-choice-screen');
@@ -264,27 +256,35 @@
 
     
     // Canvas Dimensions
+    // Mantenemos las dimensiones lógicas fijas para la lógica del juego.
     const GAME_WIDTH = 600;
     const GAME_HEIGHT = 400;
 
-    // Assign dimensions to canvas
+    // Asignar dimensiones al canvas
     canvas.width = GAME_WIDTH;
     canvas.height = GAME_HEIGHT;
 
-    // Power-Up Constants
+    // Redimensionar el canvas visualmente al cargar (para que ocupe el ancho del contenedor)
+    function resizeCanvas() {
+        // La lógica de CSS ya maneja el escalado visual (width: 100%),
+        // pero podemos asegurar que las dimensiones lógicas se respeten.
+    }
+    window.addEventListener('resize', resizeCanvas);
+    
+    // Power-Up Constants (Se mantienen)
     const BASE_SPEED = 5;
     const KILLS_TO_POWERUP = 20;
 
-    // Game state variables
+    // Game state variables (Se mantienen)
     let player = {
         x: 50,
         y: GAME_HEIGHT / 2,
         width: 30,
         height: 30,
-        speed: BASE_SPEED, // Base speed
+        speed: BASE_SPEED,
         health: 125, 
         maxHealth: 125, 
-        hasShield: false // Shield Power-Up state
+        hasShield: false
     };
 
     let bananas = [];
@@ -293,14 +293,14 @@
     let score = 0;
     let isGameOver = false;
     let gameRunning = false;
-    let isPaused = false; // To pause the game during Power-Up choice
+    let isPaused = false;
     
     // Power-Up variables
     let killsSincePowerup = 0;
-    let activePowerup = null; // null, 'TRIPLE', 'PIERCE', 'SPEED', 'SHIELD', 'BIG_BANANA'
-    let powerupOption = null; // Power-Up offered for choice
+    let activePowerup = null; 
+    let powerupOption = null; 
 
-    // Zombie spawn rate: 60 frames between each spawn (1 per second)
+    // Zombie spawn rate 
     let zombieSpawnRate = 60; 
     let frameCount = 0;
 
@@ -310,7 +310,7 @@
         shoot: false 
     };
 
-    // Power-Up Name Mapping
+    // Power-Up Name Mapping (Se mantiene)
     const POWERUP_NAMES = {
         'TRIPLE': 'Triple Disparo 🍌🍌🍌',
         'PIERCE': 'Perforación 💥',
@@ -320,21 +320,20 @@
     };
 
 
-    // --- Game Classes (Models) ---
+    // --- Game Classes (Models) - Se mantienen sin cambios ---
 
-    // Class for Bananas (Projectiles)
     class Banana {
         constructor(x, y, type = 'NORMAL') {
             this.x = x;
             this.y = y;
             this.velocity = 8;
-            this.color = '#f1c40f'; // Banana yellow
+            this.color = '#f1c40f';
             this.isPiercing = (type === 'PIERCE');
             this.isBig = (type === 'BIG_BANANA');
 
             if (this.isBig) {
                 this.radius = 8;
-                this.velocity = 6; // Slower because it's bigger
+                this.velocity = 6;
             } else {
                 this.radius = 5;
                 this.velocity = 8;
@@ -347,14 +346,13 @@
             ctx.fillStyle = this.color;
             ctx.fill();
             
-            // Visual indicators
             if (this.isPiercing) {
-                 ctx.strokeStyle = '#c0392b'; // Red border
+                 ctx.strokeStyle = '#c0392b';
                  ctx.lineWidth = 1;
                  ctx.stroke();
             }
             if (this.isBig) {
-                 ctx.strokeStyle = '#fff'; // White border to highlight size
+                 ctx.strokeStyle = '#fff';
                  ctx.lineWidth = 1;
                  ctx.stroke();
             }
@@ -365,55 +363,50 @@
         }
     }
 
-    // Class for Zombies (Enemies)
     class Zombie {
         constructor(type = 'NORMAL') {
             this.x = GAME_WIDTH;
-            this.y = Math.random() * (GAME_HEIGHT - 40) + 20; // Random Y position
+            this.y = Math.random() * (GAME_HEIGHT - 40) + 20;
             this.type = type;
             this.width = 20;
             this.height = 20;
-            this.points = 10; // Base score
-            this.maxHealth = 1; // Base health
+            this.points = 10;
+            this.maxHealth = 1;
             
-            // Adjustments by type
             if (this.type === 'FAST') {
-                this.speed = Math.random() * 1.5 + 1.2; // Faster
-                this.color = '#e74c3c'; // Red for Fast
+                this.speed = Math.random() * 1.5 + 1.2;
+                this.color = '#e74c3c';
                 this.points = 15;
             } else if (this.type === 'TANK') {
-                this.speed = Math.random() * 0.4 + 0.2; // Slower
-                this.width = 30; // Bigger
+                this.speed = Math.random() * 0.4 + 0.2;
+                this.width = 30;
                 this.height = 30;
-                this.color = '#34495e'; // Dark gray for Tank
-                this.maxHealth = 3; // More resistant
+                this.color = '#34495e';
+                this.maxHealth = 3;
                 this.points = 30;
-            } else if (this.type === 'BRUTE') { // NEW Brute Zombie (Purple)
-                this.speed = Math.random() * 1 + 0.8; // Medium speed
-                this.width = 25; // Intermediate size
+            } else if (this.type === 'BRUTE') {
+                this.speed = Math.random() * 1 + 0.8;
+                this.width = 25;
                 this.height = 25;
-                this.color = '#8e44ad'; // Purple
-                this.maxHealth = 6; // 6 health
-                this.points = 50; // High points for health
-            } else { // NORMAL
-                this.speed = Math.random() * 0.8 + 0.5; // Normal speed
-                this.color = '#27ae60'; // Green
+                this.color = '#8e44ad';
+                this.maxHealth = 6;
+                this.points = 50;
+            } else {
+                this.speed = Math.random() * 0.8 + 0.5;
+                this.color = '#27ae60';
             }
             
             this.currentHealth = this.maxHealth;
         }
 
         draw() {
-            // Draw zombie body
             ctx.fillStyle = this.color;
             ctx.fillRect(this.x, this.y, this.width, this.height);
             
-            // Eyes
             ctx.fillStyle = (this.type === 'TANK' || this.type === 'BRUTE') ? '#f39c12' : '#c0392b';
             ctx.fillRect(this.x + 4, this.y + 4, 4, 4);
             ctx.fillRect(this.x + this.width - 8, this.y + 4, 4, 4);
             
-            // If Tank or Brute, show remaining health
             if (this.type === 'TANK' || this.type === 'BRUTE') {
                 ctx.fillStyle = 'white';
                 ctx.font = 'bold 10px Inter';
@@ -427,7 +420,6 @@
         }
     }
 
-    // Class for Explosion Particles
     class Particle {
         constructor(x, y, color) {
             this.x = x;
@@ -457,44 +449,37 @@
             this.velocity.y *= this.friction;
             this.x += this.velocity.x;
             this.y += this.velocity.y;
-            this.alpha -= 0.02; // Fade out
+            this.alpha -= 0.02;
         }
     }
 
 
-    // --- Game Functions ---
+    // --- Game Functions - Se mantienen sin cambios significativos ---
     
-    // Function to draw the base the player defends
     function drawBase() {
         const BASE_WIDTH = 50;
-        const BASE_COLOR = '#3498db'; // Blue for the house
-        const ROOF_COLOR = '#e74c3c'; // Red for the roof
-        const WINDOW_COLOR = '#f1c40f'; // Yellow for the windows
+        const BASE_COLOR = '#3498db';
+        const ROOF_COLOR = '#e74c3c';
+        const WINDOW_COLOR = '#f1c40f';
 
-        // 1. Draw the house body
         ctx.fillStyle = BASE_COLOR;
         ctx.fillRect(0, 0, BASE_WIDTH, GAME_HEIGHT);
 
-        // 2. Draw the roof (Triangle)
         ctx.fillStyle = ROOF_COLOR;
         ctx.beginPath();
         ctx.moveTo(0, 0); 
         ctx.lineTo(BASE_WIDTH, 0); 
-        ctx.lineTo(BASE_WIDTH / 2, 50); // Roof peak
+        ctx.lineTo(BASE_WIDTH / 2, 50);
         ctx.closePath();
         ctx.fill();
         
-        // 3. Draw some windows (yellow rectangles)
         ctx.fillStyle = WINDOW_COLOR;
         ctx.fillRect(10, 80, 15, 15);
         ctx.fillRect(25, 120, 15, 15);
         ctx.fillRect(10, GAME_HEIGHT - 100, 15, 15);
         
-        // 4. Draw a "door" (darker rectangle)
         ctx.fillStyle = '#2c3e50'; 
         ctx.fillRect(20, GAME_HEIGHT - 40, 15, 40);
-        
-        // The "META" text has been removed as per user request.
     }
 
 
@@ -503,97 +488,80 @@
         gameRunning = true;
         isPaused = false;
         
-        // Reset player and game states
         player.health = 125; 
         player.maxHealth = 125; 
-        player.y = GAME_HEIGHT / 2; // Initial central position
-        player.speed = BASE_SPEED; // Reset speed
-        player.hasShield = false; // Reset shield
+        player.y = GAME_HEIGHT / 2;
+        player.speed = BASE_SPEED;
+        player.hasShield = false;
         score = 0;
         isGameOver = false;
         bananas = [];
         zombies = [];
         particles = [];
         frameCount = 0;
-        zombieSpawnRate = 60; // 1 zombie per second
+        zombieSpawnRate = 60;
         
-        // Reset Power-Up
         killsSincePowerup = 0;
         activePowerup = null;
         powerupOption = null;
         updatePowerupDisplay();
         
-        // Hide screens and update UI
         gameOverScreen.style.display = 'none';
         powerupChoiceScreen.style.display = 'none';
         updateHealthBar();
         updateScore();
         
-        // Start the animation loop
         animate(); 
     }
 
-    // Function that applies the selected Power-Up to the player
     function applyPowerup(newPowerup) {
-        // 1. Reset all active effects
         player.speed = BASE_SPEED; 
         player.hasShield = false;
         
-        // 2. Apply the new Power-Up
         activePowerup = newPowerup;
 
         if (activePowerup === 'SPEED') {
-            player.speed = BASE_SPEED * 2; // Double speed
+            player.speed = BASE_SPEED * 2;
         } else if (activePowerup === 'SHIELD') {
-            player.hasShield = true; // Activate shield
+            player.hasShield = true;
         }
         
-        // 3. Reset counter and notify
         killsSincePowerup = 0;
         updatePowerupDisplay();
         showPowerupMessage(POWERUP_NAMES[newPowerup]);
     }
 
-
-    // Function to select a Power-Up and pause for choice
     function grantPowerup() {
-        // List of available Power-Ups
         const powerupOptions = ['TRIPLE', 'PIERCE', 'SPEED', 'SHIELD', 'BIG_BANANA'];
         
-        // Select a random Power-Up
         const randomIndex = Math.floor(Math.random() * powerupOptions.length);
         powerupOption = powerupOptions[randomIndex];
 
-        // Pause the game
         isPaused = true; 
         powerupChoiceScreen.style.display = 'flex';
 
-        // Update the choice modal
         const currentName = activePowerup ? POWERUP_NAMES[activePowerup] : 'Ninguno';
         currentPowerupName.textContent = currentName;
         newPowerupName.textContent = POWERUP_NAMES[powerupOption];
         
-        // Reset counter while the game is paused 
         killsSincePowerup = 0; 
     }
     
-    // Shows a temporary message in the center of the screen
     function showPowerupMessage(name) {
         powerupMessage.textContent = `${name} ACTIVO!`;
         powerupMessage.style.opacity = 1;
+        // La animación de desvanecimiento debe ser manejada por CSS
+        // Aquí solo la ocultamos después de un tiempo
         setTimeout(() => {
             powerupMessage.style.opacity = 0;
         }, 1500);
     }
 
-    // Updates the Power-Up text in the HUD
     function updatePowerupDisplay() {
-        // Show active Power-Up or progress
         let displayText = 'Sin Power-Up';
         
         if (activePowerup) {
             displayText = POWERUP_NAMES[activePowerup];
-            // Show shield status if active
             if (activePowerup === 'SHIELD' && player.hasShield) {
                  displayText += ' (Listo)';
             }
@@ -604,125 +572,100 @@
             powerupDisplay.classList.add('text-ecf0f1', 'bg-transparent');
         }
 
-        // If no active Power-Up OR game is paused, show progress
         if (!activePowerup || isPaused) {
             powerupDisplay.textContent = `Power-Up: ${killsSincePowerup}/${KILLS_TO_POWERUP}`;
         } else {
             powerupDisplay.textContent = displayText;
         }
-
     }
 
 
-    // Shooting function (creates a new banana)
     function shoot() {
         const yCenter = player.y + player.height / 2;
         const xStart = player.x + player.width;
         
-        // Determine banana type
         let bananaType = 'NORMAL';
         if (activePowerup === 'PIERCE') bananaType = 'PIERCE';
         if (activePowerup === 'BIG_BANANA') bananaType = 'BIG_BANANA';
 
 
-        // Base shot
         bananas.push(new Banana(xStart, yCenter, bananaType));
 
-        // Triple Shot Power-Up
         if (activePowerup === 'TRIPLE') {
-            // Upper shot
             bananas.push(new Banana(xStart, yCenter - 10, bananaType));
-            // Lower shot
             bananas.push(new Banana(xStart, yCenter + 10, bananaType));
         }
     }
 
-    // Functions to handle Power-Up choice
     function acceptPowerup() {
         if (!powerupOption) return;
         applyPowerup(powerupOption);
         powerupOption = null;
         powerupChoiceScreen.style.display = 'none';
         isPaused = false;
-        animate(); // Resume loop
+        animate();
     }
 
     function rejectPowerup() {
-        // Simply discard the option and resume the game.
         powerupOption = null;
-        // Only reset the kill counter if the current Power-Up is NOT null
         if (activePowerup) {
              killsSincePowerup = 0;
         }
         updatePowerupDisplay();
         powerupChoiceScreen.style.display = 'none';
         isPaused = false;
-        animate(); // Resume loop
+        animate();
     }
 
 
-    // Function to handle collisions
     function handleCollisions() {
         // Collisions between Bananas and Zombies
         for (let i = bananas.length - 1; i >= 0; i--) {
             const banana = bananas[i];
-            let hit = false; // Flag to know if this banana hit something
+            let hit = false; 
 
             for (let j = zombies.length - 1; j >= 0; j--) {
                 const zombie = zombies[j];
 
-                // Collision detection
                 if (
                     banana.x + banana.radius > zombie.x &&
                     banana.x - banana.radius < zombie.x + zombie.width &&
                     banana.y + banana.radius > zombie.y &&
                     banana.y - banana.radius < zombie.y + zombie.height
                 ) {
-                    // Collision
-                    
-                    // Reduce zombie health
                     zombie.currentHealth--;
 
-                    // Particle effect (using banana color for impact)
                     for (let k = 0; k < 5; k++) { 
                         particles.push(new Particle(banana.x, banana.y, '#f1c40f')); 
                     }
                     
-                    // Check if the zombie dies
                     if (zombie.currentHealth <= 0) {
                         
-                        // Death particle effect (using zombie color)
                         for (let k = 0; k < 15; k++) { 
                             particles.push(new Particle(zombie.x + zombie.width / 2, zombie.y + zombie.height / 2, zombie.color));
                         }
                         
-                        // Remove the zombie
                         zombies.splice(j, 1);
                         
-                        // Increase score and Power-Up counter based on zombie type
                         score += zombie.points; 
                         killsSincePowerup++;
                         updateScore();
                         updatePowerupDisplay();
 
-                        // Check for Power-Up grant
                         if (killsSincePowerup >= KILLS_TO_POWERUP && !isPaused) {
                             grantPowerup();
                         }
                         
-                    } // End if zombie dies
+                    }
                     
                     hit = true;
 
-                    // If the banana is NOT piercing, it's consumed and checking stops
                     if (!banana.isPiercing) {
                         break; 
                     }
-                    // If it is piercing, continue iterating to hit the next zombie
                 }
             }
 
-            // If the banana is NOT piercing AND hit, or if it went off screen, remove it.
             if ((hit && !banana.isPiercing) || banana.x > GAME_WIDTH) {
                 bananas.splice(i, 1);
             }
@@ -733,29 +676,22 @@
             const zombie = zombies[i];
 
             if (zombie.x < player.x + player.width) {
-                // Zombie reached the player's base
 
-                // 1. Check if the player has a shield
                 if (player.hasShield) {
-                    player.hasShield = false; // Break the shield
+                    player.hasShield = false;
                     updatePowerupDisplay();
-                    // Shield visual notification
                     for (let k = 0; k < 20; k++) {
-                        particles.push(new Particle(player.x, player.y + player.height / 2, '#3498db')); // Blue particles
+                        particles.push(new Particle(player.x, player.y + player.height / 2, '#3498db'));
                     }
-                    // Remove the zombie, but do not reduce health
                     zombies.splice(i, 1); 
-                    continue; // Go to the next zombie
+                    continue;
                 }
 
-                // 2. If no shield, reduce health
                 player.health -= 15; 
                 updateHealthBar();
                 
-                // Remove the zombie
                 zombies.splice(i, 1);
 
-                // Check for Game Over
                 if (player.health <= 0) {
                     player.health = 0;
                     isGameOver = true;
@@ -765,27 +701,23 @@
         }
     }
 
-    // Function to update the health bar in the DOM
     function updateHealthBar() {
         const percentage = (player.health / player.maxHealth) * 100;
         healthBar.style.width = `${percentage}%`;
         
-        // Color change based on remaining health
         if (percentage < 30) {
-             healthBar.style.backgroundColor = '#c0392b'; // Critical Red
+             healthBar.style.backgroundColor = '#c0392b';
         } else if (percentage < 60) {
-             healthBar.style.backgroundColor = '#e67e22'; // Orange
+             healthBar.style.backgroundColor = '#e67e22';
         } else {
-             healthBar.style.backgroundColor = '#2ecc71'; // Green
+             healthBar.style.backgroundColor = '#2ecc71';
         }
     }
 
-    // Function to update the score in the DOM
     function updateScore() {
         scoreDisplay.textContent = `Puntuación: ${score}`;
     }
     
-    // Function to show the Game Over screen
     function showGameOver() {
         gameRunning = false;
         gameOverScreen.style.display = 'flex';
@@ -797,10 +729,8 @@
     function animate() {
         if (isGameOver || !gameRunning || isPaused) return; 
 
-        // 1. Clear the Canvas
         ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
         
-        // 1.5. Draw the defending base (before the player)
         drawBase();
 
         // 2. Player Movement
@@ -814,22 +744,19 @@
         // 3. Zombie Generation
         frameCount++;
         if (frameCount % Math.floor(zombieSpawnRate) === 0) {
-            // Logic to choose zombie type:
             let zombieType = 'NORMAL';
             const random = Math.random();
             
-            if (random < 0.15) { // 15% Fast Zombie (Red)
+            if (random < 0.15) {
                 zombieType = 'FAST';
-            } else if (random < 0.25) { // 10% Tank Zombie (Gray)
+            } else if (random < 0.25) {
                 zombieType = 'TANK';
-            } else if (random < 0.30) { // 5% NEW Brute Zombie (Purple)
+            } else if (random < 0.30) {
                 zombieType = 'BRUTE';
             }
-            // 70% Normal Zombie (Green)
 
             zombies.push(new Zombie(zombieType));
             
-            // Increase difficulty (faster spawn rate)
             if (zombieSpawnRate > 20) {
                 zombieSpawnRate -= 0.1; 
             }
@@ -846,8 +773,6 @@
             const banana = bananas[i];
             banana.update();
             banana.draw();
-
-            // Removal for going off screen is handled in handleCollisions 
         }
         
         // 6. Update and Draw Particles
@@ -856,19 +781,17 @@
             particle.update();
             particle.draw();
 
-            // Remove faded particles
             if (particle.alpha <= 0 || particle.radius < 0.5) {
                 particles.splice(i, 1);
             }
         }
 
-        // 7. Draw Player (yellow rectangle)
+        // 7. Draw Player
         ctx.fillStyle = '#f1c40f'; 
         ctx.fillRect(player.x, player.y, player.width, player.height);
         
-        // Draw shield border if active
         if (player.hasShield) {
-            ctx.strokeStyle = '#3498db'; // Blue
+            ctx.strokeStyle = '#3498db';
             ctx.lineWidth = 3;
             ctx.strokeRect(player.x - 2, player.y - 2, player.width + 4, player.height + 4);
         }
@@ -876,22 +799,79 @@
         // 8. Handle Collisions
         handleCollisions();
 
-        // 9. Request the next frame
         requestAnimationFrame(animate);
     }
 
-    // --- Event Handlers ---
+    // --- Event Handlers (Actualizados para móvil) ---
 
-    // Keyboard movement (W/S or arrows)
+    // Función auxiliar para manejar eventos de inicio (mousedown/touchstart)
+    function handleStart(e, isUp) {
+        if (isGameOver || isPaused) return;
+        e.preventDefault();
+        keys.up = isUp;
+        keys.down = !isUp;
+    }
+
+    // Función auxiliar para manejar eventos de fin (mouseup/touchend)
+    function handleEnd(e) {
+        // En móvil, el touchend y touchcancel deben detener el movimiento
+        // En desktop, el mouseup debe detenerlo
+        if (e.type === 'touchend' || e.type === 'touchcancel' || e.type === 'mouseup' || e.type === 'mouseout') {
+             keys.up = false;
+             keys.down = false;
+        }
+    }
+
+    // Eventos de ratón/táctiles para el botón UP
+    upButton.addEventListener('mousedown', (e) => handleStart(e, true));
+    upButton.addEventListener('touchstart', (e) => handleStart(e, true));
+    upButton.addEventListener('mouseup', handleEnd);
+    upButton.addEventListener('touchend', handleEnd);
+    upButton.addEventListener('mouseout', handleEnd);
+
+    // Eventos de ratón/táctiles para el botón DOWN
+    downButton.addEventListener('mousedown', (e) => handleStart(e, false));
+    downButton.addEventListener('touchstart', (e) => handleStart(e, false));
+    downButton.addEventListener('mouseup', handleEnd);
+    downButton.addEventListener('touchend', handleEnd);
+    downButton.addEventListener('mouseout', handleEnd);
+
+
+    // Eventos de ratón/táctiles para el botón SHOOT
+    shootButton.addEventListener('click', () => {
+        if (!isGameOver && !isPaused) {
+            shoot();
+        }
+    });
+    
+    // Para evitar el "fast click" en móvil
+    shootButton.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        if (!isGameOver && !isPaused) {
+            shoot();
+        }
+    });
+
+    // Control de Disparo con Ratón (click directo en el canvas para Desktop)
+    canvas.addEventListener('mousedown', (e) => {
+        if (e.button === 0 && !isGameOver && !isPaused) {
+            e.preventDefault();
+            // Solo disparamos con el mouse en pantallas grandes, para no interferir con los botones táctiles
+            if (window.innerWidth > 768) { 
+                shoot();
+            }
+        }
+    });
+    
+    // --- Control de Teclado (Se mantiene para Desktop) ---
     document.addEventListener('keydown', (e) => {
-        if (isPaused) return; // Ignore input if paused
+        if (isPaused) return;
         
         if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') {
             keys.up = true;
         } else if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') {
             keys.down = true;
         } else if (e.key === ' ' && !keys.shoot && !isGameOver) { 
-            // The keys.shoot flag prevents automatic shooting if held down
             keys.shoot = true;
             shoot(); 
         }
@@ -907,22 +887,6 @@
         }
     });
 
-    // Shooting control for mobile devices (button)
-    shootButton.addEventListener('click', () => {
-        if (!isGameOver && !isPaused) {
-            shoot();
-        }
-    });
-
-    // Shooting control with left mouse click
-    canvas.addEventListener('mousedown', (e) => {
-        // e.button === 0 is the left mouse click
-        if (e.button === 0 && !isGameOver && !isPaused) {
-            e.preventDefault(); // Prevents default browser behavior (e.g., selection)
-            shoot();
-        }
-    });
-
     // Power-Up modal events
     acceptPowerupButton.addEventListener('click', acceptPowerup);
     rejectPowerupButton.addEventListener('click', rejectPowerup);
@@ -933,33 +897,7 @@
         initializeGame();
     });
 
-    // Touch control for movement 
-    canvas.addEventListener('touchstart', (e) => {
-        if (isPaused) return;
-        e.preventDefault(); // Important to prevent scrolling
-        
-        // Determine if the touch is in the upper or lower half of the canvas
-        const touchY = e.touches[0].clientY;
-        const rect = canvas.getBoundingClientRect();
-        const relativeY = touchY - rect.top;
-
-        if (relativeY < rect.height / 2) {
-            keys.up = true;
-            keys.down = false;
-        } else {
-            keys.down = true;
-            keys.up = false;
-        }
-    });
-
-    canvas.addEventListener('touchend', (e) => {
-        if (isPaused) return;
-        e.preventDefault();
-        keys.up = false;
-        keys.down = false;
-    });
-
-    // Start the game when the window loads
+    // Iniciar el juego
     window.onload = initializeGame;
 </script>
 
