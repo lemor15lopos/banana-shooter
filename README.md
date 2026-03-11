@@ -1,10 +1,10 @@
-# **🍌 Banana Shooter - Lemor Pro Edition**
+# **🍌 Banana Shooter - New Edition 2.0**
 
 ¡Bienvenido a la versión definitiva de **Banana Shooter**! Un shooter lateral de defensa de base desarrollado en JavaScript puro, HTML5 y CSS3, ahora con una meta-progresión completa, personalización y sistema de logros.
 
 El objetivo es proteger tu base de las incesantes hordas de zombis usando tu arsenal de bananas tácticas.
 
-## **🚀 Características de la "Lemor Pro Edition"**
+## **🚀 Características de la "New Edition 2.0"**
 
 * **Sistema de Mundos y Niveles:** Supera 3 mundos distintos con 15 niveles cada uno. ¡Cada mundo tiene su propia ambientación visual!
 * **Tienda de Cosméticos:** Gasta tus monedas 🪙 en la tienda para desbloquear:
@@ -29,13 +29,4 @@ El juego es **100% autocontenido** en un solo archivo `index.html`.
 * **Interfaz:** Tailwind CSS para menús modernos y responsivos.
 * **Persistencia:** Todos tus progresos (monedas, niveles, skins y logros) se guardan automáticamente en tu navegador (`localStorage`).
 
-## **🌐 Instalación y Despliegue**
-
-Para jugar o compartir tu creación:
-
-1.  Sube el archivo `index.html` y este `README.md` a un repositorio de GitHub.
-2.  Activa **GitHub Pages** en la configuración del repositorio (`Settings > Pages`).
-3.  ¡Listo! Tu juego estará disponible en: `https://<tu-usuario>.github.io/<nombre-del-repo>/`
-
----
-Hecho con 💛 por **Lemor** y **Gen**.
+Pasatelo bien
