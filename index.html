@@ -3,903 +3,665 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Banana Shooter - Defiende la Base</title>
-    <!-- Tailwind CSS se carga desde CDN -->
+    <title>Banana Shooter - New Edition 2.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Estilos personalizados para el juego, incluyendo la fuente Inter */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #1a1a2e; /* Fondo oscuro */
+            background-color: #0f172a;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            padding: 10px; /* Menos padding en móvil */
+            padding: 10px;
         }
 
         #game-container {
             position: relative;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+            border-radius: 16px;
             overflow: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
             max-width: 600px; 
             width: 100%;
+            background: #1e293b;
         }
 
         canvas {
-            background-color: #2c3e50; /* Color de fondo del juego */
             display: block;
-            border: 4px solid #f39c12; /* Borde naranja llamativo */
-            /* Hacer que el canvas ocupe todo el ancho disponible del contenedor */
-            width: 100%; 
-            height: auto; /* Mantener la proporción */
+            border: 4px solid #f39c12;
+            width: 600px; 
+            height: 400px;
+            background-color: #000;
         }
 
-        /* Estilo para la barra de vida */
-        #health-bar-container {
-            width: 100%;
-            background-color: #333;
-            border-radius: 4px;
-            overflow: hidden;
-            margin-bottom: 10px;
-        }
-
-        #health-bar {
-            height: 15px;
-            background-color: #e74c3c; /* Rojo para la vida */
-            transition: width 0.3s;
-        }
-
-        /* Estilos de botones y HUD */
-        .game-ui {
-            padding: 10px;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
+        .modal-screen {
+            position: absolute; 
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: none; 
+            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            color: #ecf0f1;
-            background-color: #111;
-            border-bottom-left-radius: 8px;
-            border-bottom-right-radius: 8px;
+            background-color: rgba(15, 23, 42, 0.95);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            z-index: 50;
+        }
+
+        /* BOTÓN DE SOPORTE */
+        #support-btn {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background-color: #475569;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 50px;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 60;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        #support-btn:hover { background-color: #64748b; transform: scale(1.1); }
+
+        #powerup-modal {
+            position: absolute;
+            background-color: rgba(30, 41, 59, 0.98);
+            border: 4px solid #f39c12;
+            border-radius: 20px;
+            width: 85%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 25px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            z-index: 1000; 
+            box-shadow: 0 0 100px rgba(0,0,0,0.8);
         }
 
         .button-control {
             background-color: #f39c12;
             color: #1a1a2e;
-            padding: 12px 24px; /* Botones más grandes */
+            padding: 10px;
             border-radius: 8px;
             font-weight: bold;
             cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
-            box-shadow: 0 4px #e67e22;
-            user-select: none;
-            flex-grow: 1; /* Para que los botones se repartan el espacio */
-            margin: 5px;
+            transition: all 0.2s;
+            border: none;
+            margin: 4px;
+            text-transform: uppercase;
+            font-size: 0.8rem;
         }
 
-        .button-control:hover {
+        .button-control:hover:not(.button-disabled) {
             background-color: #e67e22;
+            transform: scale(1.05);
         }
 
-        .button-control:active {
-            transform: translateY(2px);
-            box-shadow: 0 2px #e67e22;
-        }
-        
-        /* Controles específicos para el móvil (direccionales y disparo) */
-        #mobile-controls {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            padding: 10px 0;
-            background-color: #1a1a2e; /* Color oscuro para el fondo de los controles */
-        }
-        
-        #directional-controls {
-            display: flex;
-            flex-direction: column;
-            width: 35%; /* Ocupar menos espacio que el botón de disparo */
-        }
-        
-        #shoot-control-container {
-            width: 60%; 
-        }
+        .button-disabled { background-color: #475569 !important; cursor: not-allowed; opacity: 0.6; }
 
-        /* Estilos de Power-Up y Game Over (se mantienen igual) */
-        #powerup-message, #powerup-choice-screen, #game-over-screen {
-            /* Asegurar que las pantallas modales se escalen correctamente con el contenedor */
-            position: absolute; 
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            /* Propiedades para centrar y estilizar los modales */
-            display: none; /* Por defecto están ocultos */
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background-color: rgba(0, 0, 0, 0.85);
-            color: white;
-            padding: 20px;
-            text-align: center;
-            z-index: 10;
-            border-radius: 12px;
-        }
+        #health-bar-container { width: 100%; background: #334155; height: 12px; }
+        #health-bar { height: 100%; background: #ef4444; width: 100%; transition: width 0.3s; }
 
-        #powerup-message {
-            opacity: 0;
-            transition: opacity 0.5s;
-            font-size: 1.5rem;
-            background-color: rgba(243, 156, 18, 0.9);
-            color: #1a1a2e;
-            height: 50px;
-            padding: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            top: 20px;
-            width: 80%;
+        #achievement-toast {
+            position: absolute;
+            top: -100px;
             left: 50%;
             transform: translateX(-50%);
-            pointer-events: none; /* No bloquear clicks */
-            position: absolute; /* Usamos position absolute para que se superponga */
+            background: #f39c12;
+            color: #1a1a2e;
+            padding: 10px 20px;
+            border-radius: 0 0 12px 12px;
+            font-weight: 900;
+            z-index: 2000;
+            transition: top 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: 80%;
+            text-align: center;
         }
 
-        /* Ajustes para el botón de disparo en móvil */
-        #shootButton {
-            width: 100%;
-            height: 100%;
-            min-height: 80px; /* Altura mínima para un buen objetivo táctil */
-            background-color: #c0392b; /* Rojo para disparar */
-            box-shadow: 0 4px #a93226;
+        .achievement-item {
+            background: #334155;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-align: left;
         }
-        #shootButton:hover {
-            background-color: #a93226;
-        }
-        #shootButton:active {
-            transform: translateY(2px);
-            box-shadow: 0 2px #a93226;
-        }
-
-        /* Ocultar controles de móvil en pantallas grandes */
-        @media (min-width: 768px) {
-            #mobile-controls {
-                display: none !important;
-            }
+        .achievement-unlocked { border-left: 4px solid #f39c12; background: #3e4c5e; }
+        
+        .cosmetic-card {
+            background: #334155;
+            padding: 8px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
         }
     </style>
 </head>
 <body>
 
-<div id="game-container" class="max-w-xl w-full">
-    <div id="health-bar-container">
-        <div id="health-bar"></div>
+<div id="game-container">
+    <div id="health-bar-container"><div id="health-bar"></div></div>
+    
+    <div id="achievement-toast">
+        <div class="text-[10px] uppercase">¡Logro Completado!</div>
+        <div id="toast-name" class="text-sm">Nombre</div>
     </div>
-    <!-- Canvas de juego, tamaño fijo para el desarrollo -->
+
+    <div id="powerup-modal">
+        <div class="text-yellow-400 font-black text-xl mb-2 uppercase italic">¡Suministros!</div>
+        <div id="pu-icon" class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-3xl mb-4 text-white">+</div>
+        <h3 id="pu-name" class="text-2xl font-bold mb-1">BOTIQUÍN</h3>
+        <p id="pu-desc" class="text-slate-400 mb-6 text-sm text-center">Descripción.</p>
+        <div class="flex justify-center gap-4 w-full">
+            <button onclick="acceptPowerUp()" class="button-control bg-green-600 text-white flex-1 py-3">ACEPTAR</button>
+            <button onclick="declinePowerUp()" class="button-control bg-red-600 text-white flex-1 py-3">RECHAZAR</button>
+        </div>
+    </div>
+
+    <div id="pause-trigger" class="absolute top-5 right-2 w-10 h-10 bg-yellow-500 rounded-full hidden flex items-center justify-center cursor-pointer z-40 text-slate-900 font-bold" onclick="togglePause()">II</div>
+
     <canvas id="gameCanvas"></canvas>
     
-    <!-- Mensaje de Power-Up de notificación -->
-    <div id="powerup-message">POWER UP OBTENIDO!</div>
+    <div id="main-menu-screen" class="modal-screen" style="display: flex;">
+        <h1 class="text-5xl font-black mb-1 text-yellow-400 italic">BANANA SHOOTER</h1>
+        <p class="text-slate-400 mb-6 font-bold tracking-widest">NEW EDITION 2.0</p>
+        <button id="modeLevelsBtn" class="button-control w-64 bg-blue-500 text-white">Modo Niveles</button>
+        <button id="modeInfiniteBtn" class="button-control w-64">Batalla Infinita</button>
+        <div id="infinite-lock-msg" class="text-xs text-red-400 mb-2">Bloqueado: Mundo 2</div>
+        <div class="flex flex-wrap justify-center gap-1 mt-2">
+            <button id="openCustomBtn" class="button-control bg-purple-600 text-white px-4">Colores</button>
+            <button id="openShopMenuBtn" class="button-control bg-green-600 text-white px-4">Tienda</button>
+            <button id="openAchievementsBtn" class="button-control bg-yellow-600 text-white px-4">Logros</button>
+        </div>
 
-    <!-- Pantalla de Elección de Power-Up (Modal) -->
-    <div id="powerup-choice-screen">
-        <h2 class="text-3xl font-bold mb-4">¡Power-Up Disponible!</h2>
-        <p class="text-xl mb-4">¿Deseas reemplazar tu Power-Up actual (<span id="current-powerup-name" class="font-bold text-yellow-400">Sin Power-Up</span>) por:</p>
-        <p class="text-3xl mb-8 font-extrabold text-white" id="new-powerup-name"></p>
-        
-        <div class="flex space-x-4">
-            <button id="acceptPowerup" class="choice-button button-control choice-accept">Aceptar</button>
-            <button id="rejectPowerup" class="choice-button button-control choice-reject">Rechazar (Mantener actual)</button>
+        <div id="support-btn" onclick="openSupport()">
+            <span>SOPORTE</span>
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"></path></svg>
         </div>
     </div>
 
-    <div id="game-over-screen">
-        <h1 class="text-4xl font-black mb-4">¡JUEGO TERMINADO!</h1>
-        <p id="final-score" class="text-2xl mb-6">Puntuación Final: 0</p>
-        <button id="restartButton" class="button-control">Jugar de Nuevo</button>
+    <div id="support-screen" class="modal-screen">
+        <h2 class="text-3xl font-bold mb-4 text-slate-400 italic">AYUDA Y SOPORTE</h2>
+        <div class="bg-slate-800 p-6 rounded-xl w-80 text-left border border-slate-700">
+            <p class="text-sm mb-4">¡Hola <b>Usuario</b>! Si tienes algún problema con el juego o quieres reportar un bug, escríbenos:</p>
+            <div class="text-yellow-400 font-bold mb-1">EMAIL:</div>
+            <div class="text-white text-xs mb-4">soportebananashooter@gmail.com</div>
+            <div class="text-blue-400 font-bold mb-1">VERSIÓN:</div>
+            <div class="text-white text-xs">v2.0 (New Edition 2.0)</div>
+        </div>
+        <button onclick="closeModal('support-screen')" class="button-control bg-red-600 text-white w-40 mt-6">Volver</button>
     </div>
 
-    <div class="game-ui">
-        <span id="scoreDisplay" class="text-lg">Puntuación: 0</span>
-        <span id="powerup-display">Sin Power-Up</span>
+    <div id="achievements-screen" class="modal-screen overflow-y-auto">
+        <h2 class="text-3xl font-bold mb-4 text-yellow-400 italic">LOGROS</h2>
+        <div id="achievements-list" class="w-full max-w-sm mb-4 px-2"></div>
+        <button onclick="closeModal('achievements-screen')" class="button-control bg-red-600 text-white w-40">Volver</button>
     </div>
-    
-    <!-- NUEVOS CONTROLES MÓVILES DEDICADOS -->
-    <div id="mobile-controls">
-        
-        <!-- Botones de movimiento (Arriba/Abajo) -->
-        <div id="directional-controls">
-            <button id="upButton" class="button-control">▲ Arriba</button>
-            <button id="downButton" class="button-control">▼ Abajo</button>
-        </div>
 
-        <!-- Botón de disparo -->
-        <div id="shoot-control-container">
-            <button id="shootButton" class="button-control">Disparar 🍌</button>
+    <div id="shop-screen" class="modal-screen overflow-y-auto">
+        <h2 class="text-3xl font-bold mb-2 text-yellow-400 italic text-center">TIENDA</h2>
+        <p id="shop-coins" class="text-xl mb-4 font-bold text-yellow-500 text-center">🪙 0</p>
+        <div class="w-full max-w-xs mx-auto">
+            <h3 class="text-left text-xs font-bold text-slate-400 mb-2 uppercase">Skins</h3>
+            <div id="cosmetics-grid" class="grid grid-cols-2 gap-2 pb-4"></div>
+            <h3 class="text-left text-xs font-bold text-slate-400 mb-2 uppercase border-t border-slate-700 pt-2">Sombreros</h3>
+            <div id="hats-grid" class="grid grid-cols-2 gap-2 pb-4"></div>
+            <h3 class="text-left text-xs font-bold text-slate-400 mb-2 uppercase border-t border-slate-700 pt-2">Mejoras</h3>
+            <div class="grid grid-cols-2 gap-2 mb-4">
+                <button id="buyHealBtn" class="button-control text-[10px]">Curar (30 🪙)</button>
+                <button id="buyMaxHealthBtn" class="button-control text-[10px]">+25 Vida (50 🪙)</button>
+            </div>
         </div>
+        <button onclick="closeModal('shop-screen')" class="button-control bg-red-600 text-white w-40">Cerrar</button>
+    </div>
+
+    <div id="pause-screen" class="modal-screen">
+        <h2 class="text-4xl font-bold mb-6">PAUSA</h2>
+        <button onclick="togglePause()" class="button-control w-64 bg-green-600 text-white">Reanudar</button>
+        <button onclick="exitToMenu()" class="button-control w-64 bg-red-600 text-white">Menú Principal</button>
+    </div>
+
+    <div id="victory-screen" class="modal-screen">
+        <h2 class="text-4xl font-bold text-green-400 mb-2 italic">¡Nivel Superado!</h2>
+        <p id="victory-reward" class="text-xl mb-6 text-yellow-400">+50 Monedas</p>
+        <button id="nextBtn" class="button-control w-64">Siguiente</button>
+    </div>
+
+    <div id="game-over-screen" class="modal-screen">
+        <h1 class="text-4xl font-black text-red-500 mb-4 italic">BASE CAÍDA</h1>
+        <button onclick="location.reload()" class="button-control w-64">Reintentar</button>
+    </div>
+
+    <div id="levels-screen" class="modal-screen">
+        <h2 id="world-title" class="text-3xl font-bold mb-4 text-blue-400">Mundo 1</h2>
+        <div id="levels-grid" class="grid grid-cols-5 gap-2 mb-6 px-2"></div>
+        <div class="flex gap-2">
+            <button id="prevWorld" class="button-control bg-slate-700 text-white">Ant.</button>
+            <button id="nextWorld" class="button-control bg-slate-700 text-white">Sig.</button>
+        </div>
+        <button onclick="closeModal('levels-screen')" class="button-control bg-slate-600 text-white w-40 mt-4">Volver</button>
+    </div>
+
+    <div id="custom-screen" class="modal-screen">
+        <h2 class="text-3xl font-bold mb-4 text-purple-400">Personalizar</h2>
+        <div class="w-full max-w-xs space-y-4 text-left text-sm">
+            <div><label>Color Jugador</label><input type="color" id="color-player" value="#f1c40f" class="w-full h-8 block"></div>
+            <div><label>Color Zombis</label><input type="color" id="color-zombie" value="#27ae60" class="w-full h-8 block"></div>
+            <div><label>Color Base</label><input type="color" id="color-base" value="#3498db" class="w-full h-8 block"></div>
+        </div>
+        <button onclick="closeModal('custom-screen')" class="button-control bg-slate-600 text-white w-40 mt-6">Aplicar</button>
+    </div>
+
+    <div class="p-2 w-full bg-slate-900 flex justify-between text-white text-[10px] uppercase font-bold tracking-widest">
+        <div id="hud-left">M1-N1 | 🪙 0</div>
+        <div id="hud-right">ZOMBIS: 0/10</div>
     </div>
 </div>
 
-<!-- Bloque de Script del Juego -->
 <script>
-    // --- Game Logic ---
     const canvas = document.getElementById('gameCanvas');
-    if (!canvas) {
-        console.error("Canvas element not found.");
-    }
     const ctx = canvas.getContext('2d');
-    const scoreDisplay = document.getElementById('scoreDisplay');
-    const healthBar = document.getElementById('health-bar');
-    const gameOverScreen = document.getElementById('game-over-screen');
-    const finalScoreDisplay = document.getElementById('final-score');
-    const restartButton = document.getElementById('restartButton');
-    
-    // Referencias a los nuevos botones
-    const upButton = document.getElementById('upButton');
-    const downButton = document.getElementById('downButton');
-    const shootButton = document.getElementById('shootButton'); 
+    canvas.width = 600; canvas.height = 400;
 
-    const powerupDisplay = document.getElementById('powerup-display');
-    const powerupMessage = document.getElementById('powerup-message');
-    const powerupChoiceScreen = document.getElementById('powerup-choice-screen');
-    const currentPowerupName = document.getElementById('current-powerup-name');
-    const newPowerupName = document.getElementById('new-powerup-name');
-    const acceptPowerupButton = document.getElementById('acceptPowerup');
-    const rejectPowerupButton = document.getElementById('rejectPowerup');
+    // --- PERSISTENCIA ---
+    let coins = parseInt(localStorage.getItem('banana_coins')) || 0;
+    let unlockedLevel = parseInt(localStorage.getItem('banana_unlocked')) || 1;
+    let totalKills = parseInt(localStorage.getItem('banana_total_kills')) || 0;
+    let ownedSkins = JSON.parse(localStorage.getItem('banana_owned_skins')) || ['DEFAULT'];
+    let ownedHats = JSON.parse(localStorage.getItem('banana_owned_hats')) || ['NONE'];
+    let unlockedAchievements = JSON.parse(localStorage.getItem('banana_achievements')) || [];
+    let claimedRewards = JSON.parse(localStorage.getItem('banana_claimed_rewards')) || [];
+    let shopActivity = JSON.parse(localStorage.getItem('banana_shop_activity')) || { skin: false, hat: false, upgrade: false };
 
-    
-    // Canvas Dimensions
-    // Mantenemos las dimensiones lógicas fijas para la lógica del juego.
-    const GAME_WIDTH = 600;
-    const GAME_HEIGHT = 400;
+    let config = {
+        playerColor: localStorage.getItem('c_player') || '#f1c40f',
+        zombieColor: localStorage.getItem('c_zombie') || '#27ae60',
+        baseColor: localStorage.getItem('c_base') || '#3498db',
+        activeSkin: localStorage.getItem('c_skin') || 'DEFAULT',
+        activeHat: localStorage.getItem('c_hat') || 'NONE'
+    };
 
-    // Asignar dimensiones al canvas
-    canvas.width = GAME_WIDTH;
-    canvas.height = GAME_HEIGHT;
+    const SKINS = {
+        'DEFAULT': { name: 'Estandar', price: 0, color: '#f1c40f' },
+        'NINJA': { name: 'Ninja', price: 150, color: '#000000' },
+        'KNIGHT': { name: 'Caballero', price: 300, color: '#bdc3c7' },
+        'ALIEN': { name: 'Visitante', price: 500, color: '#a29bfe' },
+        'ROBOT': { name: 'Mecha-Lemor', price: 800, color: '#00cec9' },
+        'GHOST': { name: 'Espectro', price: 1200, color: 'rgba(255,255,255,0.5)' },
+        'GOLDEN': { name: 'Banana Oro', price: 5000, color: '#ffd700' }
+    };
 
-    // Redimensionar el canvas visualmente al cargar (para que ocupe el ancho del contenedor)
-    function resizeCanvas() {
-        // La lógica de CSS ya maneja el escalado visual (width: 100%),
-        // pero podemos asegurar que las dimensiones lógicas se respeten.
+    const HATS = {
+        'NONE': { name: 'Sin Sombrero', price: 0, color: 'transparent' },
+        'CAP': { name: 'Gorra Roja', price: 100, color: '#ff0000' },
+        'CROWN': { name: 'Corona', price: 400, color: '#f1c40f' },
+        'VIKING': { name: 'Vikingo', price: 700, color: '#7f8c8d' },
+        'HALO': { name: 'Halo', price: 1000, color: '#81ecec' }
+    };
+
+    const ACHIEVEMENTS_DATA = [
+        { id: 1, name: "¿Qué es esto?", desc: "Mata a tu primer zombie", reward: 50 },
+        { id: 2, name: "Sanguinario", desc: "Mata a 20 zombies", reward: 200 },
+        { id: 3, name: "El trio", desc: "Mata a 3 zombies en 2 segundos", reward: 150 },
+        { id: 4, name: "¡Que velocidad!", desc: "Mata a un zombie veloz", reward: 100 },
+        { id: 5, name: "¡A vestirse!", desc: "Compra 1 cosmético", reward: 300 },
+        { id: 6, name: "Exterminador", desc: "Completa el primer mundo", reward: 1000 },
+        { id: 7, name: "Infinito", desc: "Desbloquea el modo infinito", reward: 500 },
+        { id: 8, name: "¡Mejorado!", desc: "Acepta un suministro táctico", reward: 100 },
+        { id: 9, name: "De compras", desc: "Compra 1 artículo de cada tipo", reward: 500 },
+        { id: 10, name: "Sin rendirse", desc: "Pierde una partida", reward: 50 },
+        { id: 11, name: "Bananeitor", desc: "Mata a 50 zombies", reward: 400 },
+        { id: 12, name: "Que no pare la fiesta", desc: "Llega a la oleada 20 en infinito", reward: 1000 },
+        { id: 13, name: "Soy rico", desc: "Acumula 100 monedas", reward: 200 },
+        { id: 14, name: "¡Más vida!", desc: "Compra la mejora de vida", reward: 150 },
+        { id: 16, name: "Destructor de mundos", desc: "Completa el mundo 2", reward: 2000 },
+        { id: 17, name: "Soy una bala", desc: "Acepta una mejora de velocidad", reward: 150 },
+        { id: 18, name: "En racha", desc: "Mata 10 zombies en 3s (Infinito)", reward: 800 }
+    ];
+
+    const PU_TYPES = [
+        { id: 'HEAL', name: 'BOTIQUÍN TÁCTICO', desc: 'Repara 40 puntos de la base.', icon: '+', color: '#10b981' },
+        { id: 'SPEED', name: 'ADRENALINA', desc: 'Aumenta tu velocidad por 5 segundos.', icon: 'S', color: '#f59e0b' },
+        { id: 'GOLD', name: 'BOLSA DE ORO', desc: 'Encuentras 100 monedas extra.', icon: '🪙', color: '#eab308' }
+    ];
+
+    // --- FUNCIONES INTERFAZ ---
+    function openSupport() {
+        document.getElementById('main-menu-screen').style.display = 'none';
+        document.getElementById('support-screen').style.display = 'flex';
     }
-    window.addEventListener('resize', resizeCanvas);
-    
-    // Power-Up Constants (Se mantienen)
-    const BASE_SPEED = 5;
-    const KILLS_TO_POWERUP = 20;
 
-    // Game state variables (Se mantienen)
-    let player = {
-        x: 50,
-        y: GAME_HEIGHT / 2,
-        width: 30,
-        height: 30,
-        speed: BASE_SPEED,
-        health: 125, 
-        maxHealth: 125, 
-        hasShield: false
-    };
+    function showToast(name) {
+        const toast = document.getElementById('achievement-toast');
+        document.getElementById('toast-name').innerText = name;
+        toast.style.top = "0px";
+        setTimeout(() => { toast.style.top = "-100px"; }, 3000);
+    }
 
-    let bananas = [];
-    let zombies = [];
-    let particles = [];
-    let score = 0;
-    let isGameOver = false;
-    let gameRunning = false;
-    let isPaused = false;
-    
-    // Power-Up variables
-    let killsSincePowerup = 0;
-    let activePowerup = null; 
-    let powerupOption = null; 
-
-    // Zombie spawn rate 
-    let zombieSpawnRate = 60; 
-    let frameCount = 0;
-
-    let keys = {
-        up: false,
-        down: false,
-        shoot: false 
-    };
-
-    // Power-Up Name Mapping (Se mantiene)
-    const POWERUP_NAMES = {
-        'TRIPLE': 'Triple Disparo 🍌🍌🍌',
-        'PIERCE': 'Perforación 💥',
-        'SPEED': 'Velocidad ⚡',
-        'SHIELD': 'Escudo 🛡️',
-        'BIG_BANANA': 'Banana Gigante 🌕'
-    };
-
-
-    // --- Game Classes (Models) - Se mantienen sin cambios ---
-
-    class Banana {
-        constructor(x, y, type = 'NORMAL') {
-            this.x = x;
-            this.y = y;
-            this.velocity = 8;
-            this.color = '#f1c40f';
-            this.isPiercing = (type === 'PIERCE');
-            this.isBig = (type === 'BIG_BANANA');
-
-            if (this.isBig) {
-                this.radius = 8;
-                this.velocity = 6;
-            } else {
-                this.radius = 5;
-                this.velocity = 8;
-            }
-        }
-
-        draw() {
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-            ctx.fillStyle = this.color;
-            ctx.fill();
-            
-            if (this.isPiercing) {
-                 ctx.strokeStyle = '#c0392b';
-                 ctx.lineWidth = 1;
-                 ctx.stroke();
-            }
-            if (this.isBig) {
-                 ctx.strokeStyle = '#fff';
-                 ctx.lineWidth = 1;
-                 ctx.stroke();
-            }
-        }
-
-        update() {
-            this.x += this.velocity;
+    function checkAchievement(id) {
+        if (!unlockedAchievements.includes(id)) {
+            unlockedAchievements.push(id);
+            localStorage.setItem('banana_achievements', JSON.stringify(unlockedAchievements));
+            const ach = ACHIEVEMENTS_DATA.find(a => a.id === id);
+            showToast(ach.name);
         }
     }
+
+    function claimReward(id) {
+        const ach = ACHIEVEMENTS_DATA.find(a => a.id === id);
+        if (unlockedAchievements.includes(id) && !claimedRewards.includes(id)) {
+            coins += ach.reward;
+            claimedRewards.push(id);
+            localStorage.setItem('banana_claimed_rewards', JSON.stringify(claimedRewards));
+            saveCoins();
+            renderAchievements();
+        }
+    }
+
+    function renderAchievements() {
+        const list = document.getElementById('achievements-list');
+        list.innerHTML = '';
+        ACHIEVEMENTS_DATA.forEach(ach => {
+            const isUnlocked = unlockedAchievements.includes(ach.id);
+            const isClaimed = claimedRewards.includes(ach.id);
+            const div = document.createElement('div');
+            div.className = `achievement-item ${isUnlocked ? 'achievement-unlocked' : 'opacity-40'}`;
+            let btnHtml = isUnlocked && !isClaimed ? `<button onclick="claimReward(${ach.id})" class="bg-green-500 text-[8px] px-2 py-1 rounded text-white font-bold">RECLAMAR</button>` : (isClaimed ? `<span class="text-green-400 text-[8px] font-bold">COBRADO</span>` : `<span class="text-slate-400 text-[8px]">${ach.reward}🪙</span>`);
+            div.innerHTML = `<div><div class="text-xs font-black text-yellow-400 uppercase">${ach.name}</div><div class="text-[9px] text-slate-300">${ach.desc}</div></div><div>${btnHtml}</div>`;
+            list.appendChild(div);
+        });
+    }
+
+    function renderShop() {
+        const skinsGrid = document.getElementById('cosmetics-grid');
+        skinsGrid.innerHTML = '';
+        for (const [id, skin] of Object.entries(SKINS)) {
+            const isOwned = ownedSkins.includes(id);
+            const isActive = config.activeSkin === id;
+            const card = document.createElement('div');
+            card.className = `cosmetic-card ${isActive ? 'ring-2 ring-yellow-400' : ''}`;
+            card.innerHTML = `<div style="background:${skin.color}; width:24px; height:24px; border-radius:4px;"></div><span class="text-[8px] font-bold">${skin.name}</span><button onclick="handleSkinClick('${id}')" class="text-[8px] px-2 py-1 rounded w-full ${isOwned ? 'bg-blue-600' : 'bg-green-600'}">${isActive ? 'USANDO' : (isOwned ? 'PONER' : skin.price + '🪙')}</button>`;
+            skinsGrid.appendChild(card);
+        }
+        const hatsGrid = document.getElementById('hats-grid');
+        hatsGrid.innerHTML = '';
+        for (const [id, hat] of Object.entries(HATS)) {
+            const isOwned = ownedHats.includes(id);
+            const isActive = config.activeHat === id;
+            const card = document.createElement('div');
+            card.className = `cosmetic-card ${isActive ? 'ring-2 ring-yellow-400' : ''}`;
+            card.innerHTML = `<div style="background:${hat.color}; width:24px; height:12px; border-radius:2px; border:1px solid rgba(255,255,255,0.2)"></div><span class="text-[8px] font-bold">${hat.name}</span><button onclick="handleHatClick('${id}')" class="text-[8px] px-2 py-1 rounded w-full ${isOwned ? 'bg-blue-600' : 'bg-green-600'}">${isActive ? 'USANDO' : (isOwned ? 'PONER' : hat.price + '🪙')}</button>`;
+            hatsGrid.appendChild(card);
+        }
+        document.getElementById('shop-coins').innerText = `🪙 ${coins}`;
+    }
+
+    function handleSkinClick(id) {
+        if (ownedSkins.includes(id)) { config.activeSkin = id; localStorage.setItem('c_skin', id); } 
+        else if (coins >= SKINS[id].price) { coins -= SKINS[id].price; ownedSkins.push(id); config.activeSkin = id; shopActivity.skin = true; checkShopAchievements(); localStorage.setItem('banana_owned_skins', JSON.stringify(ownedSkins)); saveCoins(); localStorage.setItem('c_skin', id); checkAchievement(5); }
+        renderShop();
+    }
+
+    function handleHatClick(id) {
+        if (ownedHats.includes(id)) { config.activeHat = id; localStorage.setItem('c_hat', id); } 
+        else if (coins >= HATS[id].price) { coins -= HATS[id].price; ownedHats.push(id); config.activeHat = id; shopActivity.hat = true; checkShopAchievements(); localStorage.setItem('banana_owned_hats', JSON.stringify(ownedHats)); saveCoins(); localStorage.setItem('c_hat', id); checkAchievement(5); }
+        renderShop();
+    }
+
+    function checkShopAchievements() {
+        localStorage.setItem('banana_shop_activity', JSON.stringify(shopActivity));
+        if (shopActivity.skin && shopActivity.hat && shopActivity.upgrade) checkAchievement(9);
+    }
+
+    function saveCoins() {
+        localStorage.setItem('banana_coins', coins);
+        if (coins >= 100) checkAchievement(13);
+    }
+
+    // --- MOTOR DEL JUEGO ---
+    let gameState = 'MENU', isPaused = false, gameMode = 'LEVELS', currentNivel = 1, currentMundoView = 1;
+    let player = { y: 200, hp: 125, maxHp: 125, dmg: 1, speed: 5, speedBoost: 0 };
+    let zombies = [], bananas = [], recentKills = [];
+    let spawnedCount = 0, processedCount = 0, frameCount = 0, infiniteWave = 1, currentPU = null;
 
     class Zombie {
-        constructor(type = 'NORMAL') {
-            this.x = GAME_WIDTH;
-            this.y = Math.random() * (GAME_HEIGHT - 40) + 20;
-            this.type = type;
-            this.width = 20;
-            this.height = 20;
-            this.points = 10;
-            this.maxHealth = 1;
-            
-            if (this.type === 'FAST') {
-                this.speed = Math.random() * 1.5 + 1.2;
-                this.color = '#e74c3c';
-                this.points = 15;
-            } else if (this.type === 'TANK') {
-                this.speed = Math.random() * 0.4 + 0.2;
-                this.width = 30;
-                this.height = 30;
-                this.color = '#34495e';
-                this.maxHealth = 3;
-                this.points = 30;
-            } else if (this.type === 'BRUTE') {
-                this.speed = Math.random() * 1 + 0.8;
-                this.width = 25;
-                this.height = 25;
-                this.color = '#8e44ad';
-                this.maxHealth = 6;
-                this.points = 50;
-            } else {
-                this.speed = Math.random() * 0.8 + 0.5;
-                this.color = '#27ae60';
-            }
-            
-            this.currentHealth = this.maxHealth;
+        constructor(isInfinite) {
+            this.x = canvas.width;
+            this.y = Math.random() * (canvas.height - 60) + 30;
+            const difficulty = isInfinite ? (infiniteWave * 0.2) : (currentNivel * 0.1);
+            this.type = Math.random() > 0.85 ? 'FAST' : 'NORMAL';
+            this.speed = (this.type === 'FAST' ? 2.5 : 1) + difficulty;
+            this.hp = 1 + Math.floor(difficulty / 3);
         }
-
+        update() { this.x -= this.speed; }
         draw() {
-            ctx.fillStyle = this.color;
-            ctx.fillRect(this.x, this.y, this.width, this.height);
-            
-            ctx.fillStyle = (this.type === 'TANK' || this.type === 'BRUTE') ? '#f39c12' : '#c0392b';
-            ctx.fillRect(this.x + 4, this.y + 4, 4, 4);
-            ctx.fillRect(this.x + this.width - 8, this.y + 4, 4, 4);
-            
-            if (this.type === 'TANK' || this.type === 'BRUTE') {
-                ctx.fillStyle = 'white';
-                ctx.font = 'bold 10px Inter';
-                ctx.textAlign = 'center';
-                ctx.fillText(`HP: ${this.currentHealth}`, this.x + this.width / 2, this.y + this.height + 10);
-            }
-        }
-
-        update() {
-            this.x -= this.speed;
+            ctx.fillStyle = this.type === 'FAST' ? '#ff4d4d' : config.zombieColor;
+            ctx.fillRect(this.x, this.y, 20, 20);
         }
     }
 
-    class Particle {
-        constructor(x, y, color) {
-            this.x = x;
-            this.y = y;
-            this.radius = Math.random() * 2 + 1;
-            this.color = color;
-            this.velocity = {
-                x: (Math.random() - 0.5) * (Math.random() * 4),
-                y: (Math.random() - 0.5) * (Math.random() * 4)
-            };
-            this.alpha = 1;
-            this.friction = 0.99;
-        }
-
-        draw() {
-            ctx.save();
-            ctx.globalAlpha = this.alpha;
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-            ctx.fillStyle = this.color;
-            ctx.fill();
-            ctx.restore();
-        }
-
-        update() {
-            this.velocity.x *= this.friction;
-            this.velocity.y *= this.friction;
-            this.x += this.velocity.x;
-            this.y += this.velocity.y;
-            this.alpha -= 0.02;
-        }
+    function triggerPowerUp() {
+        isPaused = true;
+        frameCount++; 
+        currentPU = PU_TYPES[Math.floor(Math.random() * PU_TYPES.length)];
+        document.getElementById('pu-name').innerText = currentPU.name;
+        document.getElementById('pu-desc').innerText = currentPU.desc;
+        document.getElementById('pu-icon').innerText = currentPU.icon;
+        document.getElementById('pu-icon').style.backgroundColor = currentPU.color;
+        document.getElementById('powerup-modal').style.display = 'flex';
     }
 
-
-    // --- Game Functions - Se mantienen sin cambios significativos ---
-    
-    function drawBase() {
-        const BASE_WIDTH = 50;
-        const BASE_COLOR = '#3498db';
-        const ROOF_COLOR = '#e74c3c';
-        const WINDOW_COLOR = '#f1c40f';
-
-        ctx.fillStyle = BASE_COLOR;
-        ctx.fillRect(0, 0, BASE_WIDTH, GAME_HEIGHT);
-
-        ctx.fillStyle = ROOF_COLOR;
-        ctx.beginPath();
-        ctx.moveTo(0, 0); 
-        ctx.lineTo(BASE_WIDTH, 0); 
-        ctx.lineTo(BASE_WIDTH / 2, 50);
-        ctx.closePath();
-        ctx.fill();
-        
-        ctx.fillStyle = WINDOW_COLOR;
-        ctx.fillRect(10, 80, 15, 15);
-        ctx.fillRect(25, 120, 15, 15);
-        ctx.fillRect(10, GAME_HEIGHT - 100, 15, 15);
-        
-        ctx.fillStyle = '#2c3e50'; 
-        ctx.fillRect(20, GAME_HEIGHT - 40, 15, 40);
+    function acceptPowerUp() {
+        if (currentPU.id === 'HEAL') player.hp = Math.min(player.maxHp, player.hp + 40);
+        if (currentPU.id === 'SPEED') {
+            player.speedBoost = 3;
+            checkAchievement(17);
+            setTimeout(() => player.speedBoost = 0, 5000);
+        }
+        if (currentPU.id === 'GOLD') { coins += 100; saveCoins(); }
+        checkAchievement(8);
+        closePowerUp();
     }
 
+    function declinePowerUp() { closePowerUp(); }
 
-    function initializeGame() {
-        if (gameRunning) return;
-        gameRunning = true;
+    function closePowerUp() {
+        document.getElementById('powerup-modal').style.display = 'none';
         isPaused = false;
-        
-        player.health = 125; 
-        player.maxHealth = 125; 
-        player.y = GAME_HEIGHT / 2;
-        player.speed = BASE_SPEED;
-        player.hasShield = false;
-        score = 0;
-        isGameOver = false;
-        bananas = [];
-        zombies = [];
-        particles = [];
-        frameCount = 0;
-        zombieSpawnRate = 60;
-        
-        killsSincePowerup = 0;
-        activePowerup = null;
-        powerupOption = null;
-        updatePowerupDisplay();
-        
-        gameOverScreen.style.display = 'none';
-        powerupChoiceScreen.style.display = 'none';
-        updateHealthBar();
-        updateScore();
-        
-        animate(); 
+        requestAnimationFrame(gameLoop);
     }
 
-    function applyPowerup(newPowerup) {
-        player.speed = BASE_SPEED; 
-        player.hasShield = false;
-        
-        activePowerup = newPowerup;
+    function update() {
+        const actualSpeed = player.speed + player.speedBoost;
+        if (keys.w || keys.ArrowUp) player.y = Math.max(0, player.y - actualSpeed);
+        if (keys.s || keys.ArrowDown) player.y = Math.min(canvas.height - 30, player.y + actualSpeed);
 
-        if (activePowerup === 'SPEED') {
-            player.speed = BASE_SPEED * 2;
-        } else if (activePowerup === 'SHIELD') {
-            player.hasShield = true;
-        }
-        
-        killsSincePowerup = 0;
-        updatePowerupDisplay();
-        showPowerupMessage(POWERUP_NAMES[newPowerup]);
-    }
-
-    function grantPowerup() {
-        const powerupOptions = ['TRIPLE', 'PIERCE', 'SPEED', 'SHIELD', 'BIG_BANANA'];
-        
-        const randomIndex = Math.floor(Math.random() * powerupOptions.length);
-        powerupOption = powerupOptions[randomIndex];
-
-        isPaused = true; 
-        powerupChoiceScreen.style.display = 'flex';
-
-        const currentName = activePowerup ? POWERUP_NAMES[activePowerup] : 'Ninguno';
-        currentPowerupName.textContent = currentName;
-        newPowerupName.textContent = POWERUP_NAMES[powerupOption];
-        
-        killsSincePowerup = 0; 
-    }
-    
-    function showPowerupMessage(name) {
-        powerupMessage.textContent = `${name} ACTIVO!`;
-        powerupMessage.style.opacity = 1;
-        // La animación de desvanecimiento debe ser manejada por CSS
-        // Aquí solo la ocultamos después de un tiempo
-        setTimeout(() => {
-            powerupMessage.style.opacity = 0;
-        }, 1500);
-    }
-
-    function updatePowerupDisplay() {
-        let displayText = 'Sin Power-Up';
-        
-        if (activePowerup) {
-            displayText = POWERUP_NAMES[activePowerup];
-            if (activePowerup === 'SHIELD' && player.hasShield) {
-                 displayText += ' (Listo)';
-            }
-            powerupDisplay.classList.remove('text-ecf0f1', 'bg-transparent');
-            powerupDisplay.classList.add('text-yellow-400', 'bg-yellow-400/20');
-        } else {
-            powerupDisplay.classList.remove('text-yellow-400', 'bg-yellow-400/20');
-            powerupDisplay.classList.add('text-ecf0f1', 'bg-transparent');
+        const limit = gameMode === 'LEVELS' ? (10 + currentNivel * 2) : Infinity;
+        if (gameMode === 'INFINITE' && frameCount % 600 === 0) {
+            infiniteWave++;
+            if (infiniteWave === 20) checkAchievement(12);
         }
 
-        if (!activePowerup || isPaused) {
-            powerupDisplay.textContent = `Power-Up: ${killsSincePowerup}/${KILLS_TO_POWERUP}`;
-        } else {
-            powerupDisplay.textContent = displayText;
+        if (spawnedCount < limit && frameCount % 60 === 0) {
+            zombies.push(new Zombie(gameMode === 'INFINITE'));
+            spawnedCount++;
         }
-    }
 
-
-    function shoot() {
-        const yCenter = player.y + player.height / 2;
-        const xStart = player.x + player.width;
-        
-        let bananaType = 'NORMAL';
-        if (activePowerup === 'PIERCE') bananaType = 'PIERCE';
-        if (activePowerup === 'BIG_BANANA') bananaType = 'BIG_BANANA';
-
-
-        bananas.push(new Banana(xStart, yCenter, bananaType));
-
-        if (activePowerup === 'TRIPLE') {
-            bananas.push(new Banana(xStart, yCenter - 10, bananaType));
-            bananas.push(new Banana(xStart, yCenter + 10, bananaType));
+        if (frameCount > 0 && frameCount % 1000 === 0) {
+            triggerPowerUp();
+            return; 
         }
-    }
 
-    function acceptPowerup() {
-        if (!powerupOption) return;
-        applyPowerup(powerupOption);
-        powerupOption = null;
-        powerupChoiceScreen.style.display = 'none';
-        isPaused = false;
-        animate();
-    }
-
-    function rejectPowerup() {
-        powerupOption = null;
-        if (activePowerup) {
-             killsSincePowerup = 0;
-        }
-        updatePowerupDisplay();
-        powerupChoiceScreen.style.display = 'none';
-        isPaused = false;
-        animate();
-    }
-
-
-    function handleCollisions() {
-        // Collisions between Bananas and Zombies
-        for (let i = bananas.length - 1; i >= 0; i--) {
-            const banana = bananas[i];
-            let hit = false; 
-
-            for (let j = zombies.length - 1; j >= 0; j--) {
-                const zombie = zombies[j];
-
-                if (
-                    banana.x + banana.radius > zombie.x &&
-                    banana.x - banana.radius < zombie.x + zombie.width &&
-                    banana.y + banana.radius > zombie.y &&
-                    banana.y - banana.radius < zombie.y + zombie.height
-                ) {
-                    zombie.currentHealth--;
-
-                    for (let k = 0; k < 5; k++) { 
-                        particles.push(new Particle(banana.x, banana.y, '#f1c40f')); 
-                    }
-                    
-                    if (zombie.currentHealth <= 0) {
-                        
-                        for (let k = 0; k < 15; k++) { 
-                            particles.push(new Particle(zombie.x + zombie.width / 2, zombie.y + zombie.height / 2, zombie.color));
-                        }
-                        
-                        zombies.splice(j, 1);
-                        
-                        score += zombie.points; 
-                        killsSincePowerup++;
-                        updateScore();
-                        updatePowerupDisplay();
-
-                        if (killsSincePowerup >= KILLS_TO_POWERUP && !isPaused) {
-                            grantPowerup();
-                        }
-                        
-                    }
-                    
-                    hit = true;
-
-                    if (!banana.isPiercing) {
-                        break; 
+        bananas.forEach((b, bi) => {
+            b.x += 8;
+            zombies.forEach((z, zi) => {
+                if (b.x > z.x && b.x < z.x + 20 && b.y > z.y && b.y < z.y + 20) {
+                    z.hp -= player.dmg; bananas.splice(bi, 1);
+                    if (z.hp <= 0) {
+                        totalKills++; processedCount++;
+                        localStorage.setItem('banana_total_kills', totalKills);
+                        checkAchievement(1);
+                        if (totalKills >= 20) checkAchievement(2);
+                        if (totalKills >= 50) checkAchievement(11);
+                        if (z.type === 'FAST') checkAchievement(4);
+                        const now = Date.now();
+                        recentKills.push(now);
+                        recentKills = recentKills.filter(t => now - t < (gameMode === 'INFINITE' ? 3000 : 2000));
+                        if (recentKills.length >= 3) checkAchievement(3);
+                        if (gameMode === 'INFINITE' && recentKills.length >= 10) checkAchievement(18);
+                        zombies.splice(zi, 1);
+                        coins += 5; saveCoins();
                     }
                 }
-            }
-
-            if ((hit && !banana.isPiercing) || banana.x > GAME_WIDTH) {
-                bananas.splice(i, 1);
-            }
-        }
-
-        // Collision between Zombies and Player (if the zombie reaches the left side)
-        for (let i = zombies.length - 1; i >= 0; i--) {
-            const zombie = zombies[i];
-
-            if (zombie.x < player.x + player.width) {
-
-                if (player.hasShield) {
-                    player.hasShield = false;
-                    updatePowerupDisplay();
-                    for (let k = 0; k < 20; k++) {
-                        particles.push(new Particle(player.x, player.y + player.height / 2, '#3498db'));
-                    }
-                    zombies.splice(i, 1); 
-                    continue;
-                }
-
-                player.health -= 15; 
-                updateHealthBar();
-                
-                zombies.splice(i, 1);
-
-                if (player.health <= 0) {
-                    player.health = 0;
-                    isGameOver = true;
-                    showGameOver();
-                }
-            }
-        }
-    }
-
-    function updateHealthBar() {
-        const percentage = (player.health / player.maxHealth) * 100;
-        healthBar.style.width = `${percentage}%`;
-        
-        if (percentage < 30) {
-             healthBar.style.backgroundColor = '#c0392b';
-        } else if (percentage < 60) {
-             healthBar.style.backgroundColor = '#e67e22';
-        } else {
-             healthBar.style.backgroundColor = '#2ecc71';
-        }
-    }
-
-    function updateScore() {
-        scoreDisplay.textContent = `Puntuación: ${score}`;
-    }
-    
-    function showGameOver() {
-        gameRunning = false;
-        gameOverScreen.style.display = 'flex';
-        finalScoreDisplay.textContent = `Puntuación Final: ${score}`;
-    }
-
-
-    // --- Main Game Loop ---
-    function animate() {
-        if (isGameOver || !gameRunning || isPaused) return; 
-
-        ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-        
-        drawBase();
-
-        // 2. Player Movement
-        if (keys.up && player.y > 0) {
-            player.y -= player.speed;
-        }
-        if (keys.down && player.y < GAME_HEIGHT - player.height) {
-            player.y += player.speed;
-        }
-
-        // 3. Zombie Generation
-        frameCount++;
-        if (frameCount % Math.floor(zombieSpawnRate) === 0) {
-            let zombieType = 'NORMAL';
-            const random = Math.random();
-            
-            if (random < 0.15) {
-                zombieType = 'FAST';
-            } else if (random < 0.25) {
-                zombieType = 'TANK';
-            } else if (random < 0.30) {
-                zombieType = 'BRUTE';
-            }
-
-            zombies.push(new Zombie(zombieType));
-            
-            if (zombieSpawnRate > 20) {
-                zombieSpawnRate -= 0.1; 
-            }
-        }
-
-        // 4. Update and Draw Zombies
-        zombies.forEach((zombie) => {
-            zombie.update();
-            zombie.draw();
+            });
         });
 
-        // 5. Update and Draw Bananas
-        for (let i = bananas.length - 1; i >= 0; i--) {
-            const banana = bananas[i];
-            banana.update();
-            banana.draw();
-        }
-        
-        // 6. Update and Draw Particles
-        for (let i = particles.length - 1; i >= 0; i--) {
-            const particle = particles[i];
-            particle.update();
-            particle.draw();
-
-            if (particle.alpha <= 0 || particle.radius < 0.5) {
-                particles.splice(i, 1);
+        zombies.forEach((z, zi) => {
+            z.update();
+            if (z.x < 50) {
+                player.hp -= 20;
+                zombies.splice(zi, 1);
+                processedCount++;
+                if (player.hp <= 0) gameOver();
             }
-        }
+        });
 
-        // 7. Draw Player
-        ctx.fillStyle = '#f1c40f'; 
-        ctx.fillRect(player.x, player.y, player.width, player.height);
+        if (gameMode === 'LEVELS' && processedCount >= limit) winLevel();
+        frameCount++;
+        updateHUD();
+    }
+
+    function draw() {
+        const mIdx = Math.min(2, Math.floor((currentNivel - 1) / 15));
+        const bgs = ['#1e293b', '#451a03', '#450a0a'];
+        ctx.fillStyle = bgs[mIdx]; ctx.fillRect(0,0,600,400);
+        ctx.fillStyle = config.baseColor; ctx.fillRect(0,0,50,400);
         
-        if (player.hasShield) {
-            ctx.strokeStyle = '#3498db';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(player.x - 2, player.y - 2, player.width + 4, player.height + 4);
+        const sColor = SKINS[config.activeSkin].color;
+        ctx.fillStyle = sColor;
+        if (config.activeSkin === 'ALIEN') {
+            ctx.beginPath(); ctx.ellipse(70, player.y + 15, 12, 18, 0, 0, Math.PI*2); ctx.fill();
+        } else {
+            ctx.fillRect(55, player.y, 30, 30);
+            if (config.activeSkin === 'KNIGHT') { ctx.fillStyle = "#7f8c8d"; ctx.fillRect(55, player.y, 30, 8); }
+            if (config.activeSkin === 'NINJA') { ctx.fillStyle = "red"; ctx.fillRect(55, player.y + 10, 30, 4); }
         }
 
-        // 8. Handle Collisions
-        handleCollisions();
-
-        requestAnimationFrame(animate);
-    }
-
-    // --- Event Handlers (Actualizados para móvil) ---
-
-    // Función auxiliar para manejar eventos de inicio (mousedown/touchstart)
-    function handleStart(e, isUp) {
-        if (isGameOver || isPaused) return;
-        e.preventDefault();
-        keys.up = isUp;
-        keys.down = !isUp;
-    }
-
-    // Función auxiliar para manejar eventos de fin (mouseup/touchend)
-    function handleEnd(e) {
-        // En móvil, el touchend y touchcancel deben detener el movimiento
-        // En desktop, el mouseup debe detenerlo
-        if (e.type === 'touchend' || e.type === 'touchcancel' || e.type === 'mouseup' || e.type === 'mouseout') {
-             keys.up = false;
-             keys.down = false;
+        if (config.activeHat !== 'NONE') {
+            ctx.fillStyle = HATS[config.activeHat].color;
+            if (config.activeHat === 'CAP') { ctx.fillRect(50, player.y - 5, 30, 8); ctx.fillRect(75, player.y - 2, 10, 3); }
+            else if (config.activeHat === 'CROWN') { ctx.beginPath(); ctx.moveTo(55, player.y); ctx.lineTo(55, player.y-10); ctx.lineTo(62, player.y-5); ctx.lineTo(70, player.y-10); ctx.lineTo(77, player.y-5); ctx.lineTo(85, player.y-10); ctx.lineTo(85, player.y); ctx.closePath(); ctx.fill(); }
+            else if (config.activeHat === 'VIKING') { ctx.fillRect(55, player.y-5, 30, 10); ctx.fillStyle="white"; ctx.beginPath(); ctx.moveTo(55,player.y-5); ctx.lineTo(45,player.y-15); ctx.lineTo(55,player.y-10); ctx.fill(); ctx.beginPath(); ctx.moveTo(85,player.y-5); ctx.lineTo(95,player.y-15); ctx.lineTo(85,player.y-10); ctx.fill(); }
+            else if (config.activeHat === 'HALO') { ctx.strokeStyle = "#81ecec"; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(70, player.y-10, 15, 5, 0, 0, Math.PI*2); ctx.stroke(); }
         }
-    }
-
-    // Eventos de ratón/táctiles para el botón UP
-    upButton.addEventListener('mousedown', (e) => handleStart(e, true));
-    upButton.addEventListener('touchstart', (e) => handleStart(e, true));
-    upButton.addEventListener('mouseup', handleEnd);
-    upButton.addEventListener('touchend', handleEnd);
-    upButton.addEventListener('mouseout', handleEnd);
-
-    // Eventos de ratón/táctiles para el botón DOWN
-    downButton.addEventListener('mousedown', (e) => handleStart(e, false));
-    downButton.addEventListener('touchstart', (e) => handleStart(e, false));
-    downButton.addEventListener('mouseup', handleEnd);
-    downButton.addEventListener('touchend', handleEnd);
-    downButton.addEventListener('mouseout', handleEnd);
-
-
-    // Eventos de ratón/táctiles para el botón SHOOT
-    shootButton.addEventListener('click', () => {
-        if (!isGameOver && !isPaused) {
-            shoot();
-        }
-    });
-    
-    // Para evitar el "fast click" en móvil
-    shootButton.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        if (!isGameOver && !isPaused) {
-            shoot();
-        }
-    });
-
-    // Control de Disparo con Ratón (click directo en el canvas para Desktop)
-    canvas.addEventListener('mousedown', (e) => {
-        if (e.button === 0 && !isGameOver && !isPaused) {
-            e.preventDefault();
-            // Solo disparamos con el mouse en pantallas grandes, para no interferir con los botones táctiles
-            if (window.innerWidth > 768) { 
-                shoot();
-            }
-        }
-    });
-    
-    // --- Control de Teclado (Se mantiene para Desktop) ---
-    document.addEventListener('keydown', (e) => {
-        if (isPaused) return;
         
-        if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') {
-            keys.up = true;
-        } else if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') {
-            keys.down = true;
-        } else if (e.key === ' ' && !keys.shoot && !isGameOver) { 
-            keys.shoot = true;
-            shoot(); 
+        zombies.forEach(z => z.draw());
+        ctx.fillStyle = "#fbbf24"; bananas.forEach(b => { ctx.beginPath(); ctx.arc(b.x, b.y, 5, 0, 7); ctx.fill(); });
+    }
+
+    function updateHUD() {
+        document.getElementById('health-bar').style.width = (player.hp/player.maxHp*100) + "%";
+        const m = Math.floor((currentNivel-1)/15)+1; const n = ((currentNivel-1)%15)+1;
+        document.getElementById('hud-left').innerText = gameMode === 'LEVELS' ? `M${m}-N${n} | 🪙 ${coins}` : `INF W${infiniteWave} | 🪙 ${coins}`;
+        const limit = 10 + currentNivel * 2;
+        document.getElementById('hud-right').innerText = gameMode === 'LEVELS' ? `ZOMBIS: ${processedCount}/${limit}` : `KILLS: ${totalKills}`;
+        document.getElementById('modeInfiniteBtn').classList.toggle('button-disabled', unlockedLevel < 16);
+    }
+
+    function initGame(mode, level = 1) {
+        gameMode = mode; currentNivel = level;
+        gameState = 'PLAYING'; isPaused = false;
+        player.hp = player.maxHp; player.speedBoost = 0; zombies = []; bananas = []; 
+        spawnedCount = 0; processedCount = 0; frameCount = 0; infiniteWave = 1;
+        document.querySelectorAll('.modal-screen').forEach(s => s.style.display = 'none');
+        document.getElementById('pause-trigger').style.display = 'flex';
+        requestAnimationFrame(gameLoop);
+    }
+
+    function gameLoop() {
+        if (gameState !== 'PLAYING' || isPaused) return;
+        update(); draw(); requestAnimationFrame(gameLoop);
+    }
+
+    function winLevel() {
+        gameState = 'WIN';
+        if (currentNivel === unlockedLevel) {
+            unlockedLevel++; localStorage.setItem('banana_unlocked', unlockedLevel);
+            if (unlockedLevel > 15) checkAchievement(6);
+            if (unlockedLevel > 30) checkAchievement(16);
+            if (unlockedLevel >= 16) checkAchievement(7);
         }
-    });
+        coins += 50; saveCoins();
+        document.getElementById('victory-screen').style.display = 'flex';
+        document.getElementById('nextBtn').onclick = () => initGame('LEVELS', currentNivel + 1);
+    }
 
-    document.addEventListener('keyup', (e) => {
-        if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') {
-            keys.up = false;
-        } else if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') {
-            keys.down = false;
-        } else if (e.key === ' ') {
-            keys.shoot = false;
+    function gameOver() { gameState = 'GAMEOVER'; checkAchievement(10); document.getElementById('game-over-screen').style.display = 'flex'; }
+    function togglePause() { isPaused = !isPaused; document.getElementById('pause-screen').style.display = isPaused ? 'flex' : 'none'; if (!isPaused) gameLoop(); }
+    function exitToMenu() { location.reload(); }
+    
+    function closeModal(id) {
+        if (id === 'custom-screen') {
+            config.playerColor = document.getElementById('color-player').value;
+            config.zombieColor = document.getElementById('color-zombie').value;
+            config.baseColor = document.getElementById('color-base').value;
+            localStorage.setItem('c_player', config.playerColor); localStorage.setItem('c_zombie', config.zombieColor); localStorage.setItem('c_base', config.baseColor);
         }
-    });
+        document.getElementById(id).style.display = 'none';
+        document.getElementById('main-menu-screen').style.display = 'flex';
+    }
 
-    // Power-Up modal events
-    acceptPowerupButton.addEventListener('click', acceptPowerup);
-    rejectPowerupButton.addEventListener('click', rejectPowerup);
+    let keys = {};
+    window.onkeydown = (e) => {
+        keys[e.key] = true;
+        if (e.key === ' ' && gameState === 'PLAYING' && !isPaused) bananas.push({x: 80, y: player.y + 15});
+        if (e.key === 'p' || e.key === 'Escape') togglePause();
+    };
+    window.onkeyup = (e) => keys[e.key] = false;
 
+    // BOTONES NAVEGACIÓN
+    document.getElementById('modeLevelsBtn').onclick = () => { document.getElementById('main-menu-screen').style.display = 'none'; document.getElementById('levels-screen').style.display = 'flex'; renderLevels(); };
+    document.getElementById('openShopMenuBtn').onclick = () => { document.getElementById('main-menu-screen').style.display = 'none'; document.getElementById('shop-screen').style.display = 'flex'; renderShop(); };
+    document.getElementById('openAchievementsBtn').onclick = () => { document.getElementById('main-menu-screen').style.display = 'none'; document.getElementById('achievements-screen').style.display = 'flex'; renderAchievements(); };
+    document.getElementById('openCustomBtn').onclick = () => { document.getElementById('main-menu-screen').style.display = 'none'; document.getElementById('custom-screen').style.display = 'flex'; };
+    document.getElementById('modeInfiniteBtn').onclick = () => { if(unlockedLevel >= 16) initGame('INFINITE'); };
 
-    // Restart button
-    restartButton.addEventListener('click', () => {
-        initializeGame();
-    });
+    function renderLevels() {
+        const grid = document.getElementById('levels-grid'); grid.innerHTML = '';
+        document.getElementById('world-title').innerText = `Mundo ${currentMundoView}`;
+        for (let i = 1; i <= 15; i++) {
+            const levelNum = ((currentMundoView - 1) * 15) + i;
+            const btn = document.createElement('button');
+            btn.className = `w-10 h-10 rounded text-[10px] font-bold ${levelNum <= unlockedLevel ? 'bg-yellow-500' : 'bg-slate-700 opacity-50'}`;
+            btn.innerText = i;
+            if (levelNum <= unlockedLevel) btn.onclick = () => initGame('LEVELS', levelNum);
+            grid.appendChild(btn);
+        }
+    }
 
-    // Iniciar el juego
-    window.onload = initializeGame;
+    document.getElementById('prevWorld').onclick = () => { if(currentMundoView > 1) { currentMundoView--; renderLevels(); } };
+    document.getElementById('nextWorld').onclick = () => { if(currentMundoView < 3) { currentMundoView++; renderLevels(); } };
+    
+    document.getElementById('buyHealBtn').onclick = () => { if(coins >= 30) { coins -= 30; player.hp = player.maxHp; shopActivity.upgrade = true; checkShopAchievements(); saveCoins(); renderShop(); } };
+    document.getElementById('buyMaxHealthBtn').onclick = () => { if(coins >= 50) { coins -= 50; player.maxHp += 25; player.hp = player.maxHp; shopActivity.upgrade = true; checkShopAchievements(); checkAchievement(14); saveCoins(); renderShop(); } };
+
 </script>
-
 </body>
 </html>
