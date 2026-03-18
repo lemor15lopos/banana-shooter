@@ -3,665 +3,1951 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Banana Shooter - New Edition 2.0</title>
+    <title>Banana Shooter - MEGA EDITION 3.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        * { box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; }
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0f172a;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 10px;
+            background: radial-gradient(ellipse at center, #1a1040 0%, #0f172a 70%);
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; margin: 0; padding: 0;
         }
-
+        #game-wrapper {
+            display: flex; justify-content: center; align-items: center;
+            width: 100vw; height: 100vh;
+        }
         #game-container {
             position: relative;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
-            border-radius: 16px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            max-width: 600px; 
-            width: 100%;
+            box-shadow: 0 0 60px rgba(243,156,18,0.3), 0 20px 50px rgba(0,0,0,0.8);
+            border-radius: 16px; overflow: hidden;
+            display: flex; flex-direction: column; align-items: center;
             background: #1e293b;
+            border: 2px solid rgba(243,156,18,0.3);
+            transform-origin: top center;
         }
-
-        canvas {
-            display: block;
-            border: 4px solid #f39c12;
-            width: 600px; 
-            height: 400px;
-            background-color: #000;
-        }
-
+        canvas { display: block; background-color: #000; image-rendering: pixelated; image-rendering: crisp-edges; }
         .modal-screen {
-            position: absolute; 
-            top: 0; left: 0; width: 100%; height: 100%;
-            display: none; 
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background-color: rgba(15, 23, 42, 0.95);
-            color: white;
-            padding: 20px;
-            text-align: center;
-            z-index: 50;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            background-color: rgba(10,15,30,0.97); color: white;
+            padding: 16px; text-align: center; z-index: 50; overflow: hidden;
+            border-radius: 16px;
         }
-
-        /* BOTÓN DE SOPORTE */
-        #support-btn {
-            position: absolute;
-            bottom: 15px;
-            right: 15px;
-            background-color: #475569;
-            color: white;
-            padding: 10px 15px;
-            border-radius: 50px;
-            font-size: 10px;
-            font-weight: bold;
-            cursor: pointer;
-            z-index: 60;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.2s;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        #support-btn:hover { background-color: #64748b; transform: scale(1.1); }
-
-        #powerup-modal {
-            position: absolute;
-            background-color: rgba(30, 41, 59, 0.98);
-            border: 4px solid #f39c12;
-            border-radius: 20px;
-            width: 85%;
-            top: 50%;
-            left: 50%;
+        .modal-screen.modal-scrollable {
+            justify-content: flex-start;
+            position: fixed; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            padding: 25px;
+            width: min(600px, 96vw); height: auto;
+            max-height: min(428px, 90vh);
+            border-radius: 16px; z-index: 200;
+            background-color: rgba(10, 15, 30, 0.99);
+        }
+        /* Overlay oscuro detrás de los modales fixed */
+        .modal-overlay {
             display: none;
-            flex-direction: column;
-            align-items: center;
-            z-index: 1000; 
-            box-shadow: 0 0 100px rgba(0,0,0,0.8);
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(5, 8, 20, 0.92);
+            z-index: 199;
+            backdrop-filter: blur(2px);
         }
-
         .button-control {
-            background-color: #f39c12;
-            color: #1a1a2e;
-            padding: 10px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: none;
-            margin: 4px;
-            text-transform: uppercase;
-            font-size: 0.8rem;
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: #1a1a2e; padding: 10px; border-radius: 8px;
+            font-weight: bold; cursor: pointer; transition: all 0.2s;
+            border: none; margin: 4px; text-transform: uppercase; font-size: 0.8rem;
+            box-shadow: 0 2px 8px rgba(243,156,18,0.3);
         }
-
-        .button-control:hover:not(.button-disabled) {
-            background-color: #e67e22;
-            transform: scale(1.05);
-        }
-
-        .button-disabled { background-color: #475569 !important; cursor: not-allowed; opacity: 0.6; }
-
-        #health-bar-container { width: 100%; background: #334155; height: 12px; }
-        #health-bar { height: 100%; background: #ef4444; width: 100%; transition: width 0.3s; }
-
+        .button-control:hover:not(.button-disabled) { filter: brightness(1.15); transform: scale(1.05); }
+        .button-disabled { background: #475569 !important; cursor: not-allowed; opacity: 0.6; box-shadow: none; }
+        #health-bar-container { width: 100%; background: #1e293b; height: 14px; position: relative; }
+        #health-bar { height: 100%; background: linear-gradient(90deg,#ef4444,#f97316); width: 100%; transition: width 0.3s; border-radius: 0 4px 4px 0; }
+        #xp-bar-container { width: 100%; background: #1e293b; height: 6px; }
+        #xp-bar { height: 100%; background: linear-gradient(90deg,#6366f1,#8b5cf6); width: 0%; transition: width 0.4s; }
         #achievement-toast {
-            position: absolute;
-            top: -100px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #f39c12;
-            color: #1a1a2e;
-            padding: 10px 20px;
-            border-radius: 0 0 12px 12px;
-            font-weight: 900;
-            z-index: 2000;
+            position: absolute; top: -90px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, #f39c12, #f1c40f);
+            color: #1a1a2e; padding: 10px 20px; border-radius: 12px;
+            font-weight: 900; z-index: 2000;
             transition: top 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            width: 80%;
-            text-align: center;
+            width: 82%; text-align: center; pointer-events: none;
+            box-shadow: 0 4px 20px rgba(243,156,18,0.5);
         }
-
+        #daily-toast {
+            position: absolute; top: -90px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white; padding: 10px 20px; border-radius: 12px;
+            font-weight: 900; z-index: 2001;
+            transition: top 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: 82%; text-align: center; pointer-events: none;
+            box-shadow: 0 4px 20px rgba(16,185,129,0.5);
+        }
+        #combo-display {
+            position: absolute; right: 8px; top: 50px;
+            font-size: 11px; font-weight: 900; color: #fbbf24;
+            text-shadow: 0 0 10px rgba(251,191,36,0.8);
+            transition: all 0.2s; pointer-events: none; z-index: 30;
+            text-align: right;
+        }
         .achievement-item {
-            background: #334155;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            text-align: left;
+            background: #1e293b; padding: 10px 12px; border-radius: 8px; margin-bottom: 6px;
+            display: flex; justify-content: space-between; align-items: center;
+            text-align: left; gap: 8px; min-height: 48px; border: 1px solid #334155;
         }
-        .achievement-unlocked { border-left: 4px solid #f39c12; background: #3e4c5e; }
-        
+        .achievement-item > div:first-child { flex: 1; min-width: 0; }
+        .achievement-item > div:last-child { flex-shrink: 0; }
+        .achievement-unlocked { border-left: 4px solid #f39c12; background: #2d3f52; border-color: #3d5a7a; }
         .cosmetic-card {
-            background: #334155;
-            padding: 8px;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
+            background: #1e293b; padding: 10px 8px; border-radius: 10px;
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+            min-width: 0; width: 100%; border: 1px solid #334155; transition: all 0.2s;
         }
+        .cosmetic-card:hover { border-color: #475569; transform: translateY(-1px); }
+        .cosmetic-card button { width: 100%; min-width: 0; word-break: break-word; white-space: normal; line-height: 1.2; }
+        #powerup-modal {
+            position: absolute; background: linear-gradient(135deg,rgba(30,41,59,0.99),rgba(15,23,42,0.99));
+            border: 3px solid #f39c12; border-radius: 20px; width: 85%;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            padding: 24px; display: none; flex-direction: column; align-items: center;
+            z-index: 1000; box-shadow: 0 0 60px rgba(243,156,18,0.4);
+        }
+        #support-btn {
+            position: absolute; bottom: 12px; right: 12px;
+            background: rgba(71,85,105,0.8); color: white; padding: 8px 14px;
+            border-radius: 50px; font-size: 10px; font-weight: bold; cursor: pointer;
+            z-index: 60; display: flex; align-items: center; gap: 5px; transition: all 0.2s;
+            border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(4px);
+        }
+        #support-btn:hover { background: rgba(100,116,139,0.9); transform: scale(1.05); }
+        .tab-btn { padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; border: none; transition: all 0.2s; background: #334155; color: #94a3b8; }
+        .tab-btn.active { background: #f39c12; color: #1a1a2e; }
+        .difficulty-btn { padding: 6px 14px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; }
+        .difficulty-btn.selected { box-shadow: 0 0 12px currentColor; }
+        .stat-bar { height: 6px; border-radius: 3px; background: #334155; overflow: hidden; }
+        .stat-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+        @keyframes pulse-glow { 0%,100%{box-shadow:0 0 8px rgba(243,156,18,0.4)} 50%{box-shadow:0 0 20px rgba(243,156,18,0.9)} }
+        .pulse-glow { animation: pulse-glow 1.5s infinite; }
+        @keyframes float-up { 0%{opacity:1;transform:translateY(0)} 100%{opacity:0;transform:translateY(-60px)} }
+        .float-text { position:absolute; font-weight:900; font-size:14px; pointer-events:none; animation: float-up 1s ease-out forwards; z-index: 100; }
+        .level-badge { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; font-size:9px; font-weight:900; }
+        #pause-trigger {
+            position: absolute; top: 16px; right: 8px; width: 36px; height: 36px;
+            background: rgba(243,156,18,0.9); border-radius: 50%; display: none;
+            align-items: center; justify-content: center; cursor: pointer; z-index: 40;
+            color: #1a1a2e; font-weight: 900; font-size: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        }
+        .zombie-hp-bar { position: absolute; height: 3px; background: #ef4444; border-radius: 2px; }
+        .world-badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 10px; font-weight: 900; }
+        #hud-bar { position: relative; }
+        #streak-display { position: absolute; top: 60px; left: 8px; font-size: 10px; font-weight: 900; pointer-events: none; z-index: 30; }
+        .notif-dot { width:8px; height:8px; background:#ef4444; border-radius:50%; display:inline-block; animation: pulse-glow 1s infinite; margin-left: 4px; }
+        #version-badge { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); background: rgba(99,102,241,0.2); border: 1px solid rgba(99,102,241,0.5); color: #a5b4fc; padding: 2px 10px; border-radius: 99px; font-size: 9px; font-weight: 900; letter-spacing: 2px; pointer-events: none; z-index: 10; }
     </style>
 </head>
 <body>
-
+<div id="game-wrapper">
+<div id="modal-overlay" class="modal-overlay"></div>
 <div id="game-container">
-    <div id="health-bar-container"><div id="health-bar"></div></div>
-    
+    <div id="health-bar-container">
+        <div id="health-bar"></div>
+    </div>
+    <div id="xp-bar-container"><div id="xp-bar"></div></div>
+
     <div id="achievement-toast">
-        <div class="text-[10px] uppercase">¡Logro Completado!</div>
-        <div id="toast-name" class="text-sm">Nombre</div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;">🏆 ¡Logro Desbloqueado!</div>
+        <div id="toast-name" style="font-size:14px;">Nombre</div>
+    </div>
+    <div id="daily-toast">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;">🎁 ¡Recompensa Diaria!</div>
+        <div id="daily-toast-name" style="font-size:14px;">+100 🪙</div>
     </div>
 
+    <div id="combo-display"></div>
+    <div id="streak-display"></div>
+    <div id="pause-trigger" onclick="togglePause()">II</div>
+
+    <!-- MODAL POWER UP -->
     <div id="powerup-modal">
-        <div class="text-yellow-400 font-black text-xl mb-2 uppercase italic">¡Suministros!</div>
-        <div id="pu-icon" class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-3xl mb-4 text-white">+</div>
-        <h3 id="pu-name" class="text-2xl font-bold mb-1">BOTIQUÍN</h3>
-        <p id="pu-desc" class="text-slate-400 mb-6 text-sm text-center">Descripción.</p>
-        <div class="flex justify-center gap-4 w-full">
-            <button onclick="acceptPowerUp()" class="button-control bg-green-600 text-white flex-1 py-3">ACEPTAR</button>
-            <button onclick="declinePowerUp()" class="button-control bg-red-600 text-white flex-1 py-3">RECHAZAR</button>
+        <div style="color:#f39c12;font-weight:900;font-size:18px;margin-bottom:6px;text-transform:uppercase;letter-spacing:2px;">⚡ SUMINISTRO</div>
+        <div id="pu-icon" style="width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:12px;font-weight:900;">+</div>
+        <h3 id="pu-name" style="font-size:20px;font-weight:900;margin-bottom:4px;">BOTIQUÍN</h3>
+        <p id="pu-desc" style="color:#94a3b8;font-size:12px;text-align:center;margin-bottom:20px;">Descripción.</p>
+        <div style="display:flex;gap:12px;width:100%;">
+            <button onclick="acceptPowerUp()" class="button-control" style="background:linear-gradient(135deg,#10b981,#059669);color:white;flex:1;padding:12px;">✅ ACEPTAR</button>
+            <button onclick="declinePowerUp()" class="button-control" style="background:linear-gradient(135deg,#ef4444,#dc2626);color:white;flex:1;padding:12px;">❌ RECHAZAR</button>
         </div>
     </div>
-
-    <div id="pause-trigger" class="absolute top-5 right-2 w-10 h-10 bg-yellow-500 rounded-full hidden flex items-center justify-center cursor-pointer z-40 text-slate-900 font-bold" onclick="togglePause()">II</div>
 
     <canvas id="gameCanvas"></canvas>
-    
-    <div id="main-menu-screen" class="modal-screen" style="display: flex;">
-        <h1 class="text-5xl font-black mb-1 text-yellow-400 italic">BANANA SHOOTER</h1>
-        <p class="text-slate-400 mb-6 font-bold tracking-widest">NEW EDITION 2.0</p>
-        <button id="modeLevelsBtn" class="button-control w-64 bg-blue-500 text-white">Modo Niveles</button>
-        <button id="modeInfiniteBtn" class="button-control w-64">Batalla Infinita</button>
-        <div id="infinite-lock-msg" class="text-xs text-red-400 mb-2">Bloqueado: Mundo 2</div>
-        <div class="flex flex-wrap justify-center gap-1 mt-2">
-            <button id="openCustomBtn" class="button-control bg-purple-600 text-white px-4">Colores</button>
-            <button id="openShopMenuBtn" class="button-control bg-green-600 text-white px-4">Tienda</button>
-            <button id="openAchievementsBtn" class="button-control bg-yellow-600 text-white px-4">Logros</button>
-        </div>
 
+    <!-- MENÚ PRINCIPAL -->
+    <div id="main-menu-screen" class="modal-screen" style="display:flex;">
+        <div id="version-badge">MEGA EDITION 3.0</div>
+        <h1 style="font-size:48px;font-weight:900;color:#f39c12;font-style:italic;margin-bottom:0;text-shadow:0 0 30px rgba(243,156,18,0.5);">BANANA SHOOTER</h1>
+        <p style="color:#64748b;margin-bottom:4px;font-weight:bold;letter-spacing:3px;font-size:11px;">MEGA EDITION 3.0</p>
+        <div id="player-level-display" style="color:#a5b4fc;font-size:12px;font-weight:bold;margin-bottom:16px;"></div>
+
+        <div id="daily-reward-btn" onclick="claimDailyReward()" style="display:none;background:linear-gradient(135deg,#10b981,#059669);color:white;padding:10px 24px;border-radius:10px;font-weight:900;cursor:pointer;font-size:13px;margin-bottom:10px;box-shadow:0 0 20px rgba(16,185,129,0.4);border:none;text-transform:uppercase;animation:pulse-glow 1.5s infinite;">🎁 RECOMPENSA DIARIA</div>
+
+        <button id="modeLevelsBtn" class="button-control" style="width:240px;background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;">⚔️ Modo Niveles</button>
+        <button id="modeInfiniteBtn" class="button-control" style="width:240px;">♾️ Batalla Infinita</button>
+        <button id="modeSurvivalBtn" class="button-control" style="width:240px;background:linear-gradient(135deg,#ef4444,#dc2626);color:white;">💀 Supervivencia</button>
+        <button id="modeBossBtn" class="button-control" style="width:240px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:white;">👹 Asalto al Jefe</button>
+        <button id="tutorialBtn" onclick="startTutorial()" class="button-control" style="width:240px;background:linear-gradient(135deg,#10b981,#059669);color:white;display:none;animation:pulse-glow 1.5s infinite;">🎓 Jugar Tutorial</button>
+        <div id="infinite-lock-msg" style="font-size:10px;color:#f87171;margin-bottom:2px;"></div>
+
+        <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:8px;">
+            <button id="openCustomBtn" class="button-control" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:white;padding:8px 14px;font-size:11px;">🎨 Personalizar</button>
+            <button id="openShopMenuBtn" class="button-control" style="background:linear-gradient(135deg,#10b981,#059669);color:white;padding:8px 14px;font-size:11px;">🛒 Tienda</button>
+            <button id="openAchievementsBtn" class="button-control" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:white;padding:8px 14px;font-size:11px;">🏆 Logros<span id="logros-dot" style="display:none" class="notif-dot"></span></button>
+            <button id="openStatsBtn" class="button-control" style="background:linear-gradient(135deg,#06b6d4,#0284c7);color:white;padding:8px 14px;font-size:11px;">📊 Estadísticas</button>
+        </div>
         <div id="support-btn" onclick="openSupport()">
             <span>SOPORTE</span>
-            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"></path></svg>
+            <svg style="width:12px;height:12px;" fill="currentColor" viewBox="0 0 20 20"><path d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7z"/></svg>
         </div>
     </div>
 
+    <!-- SELECCIÓN DIFICULTAD -->
+    <div id="difficulty-screen" class="modal-screen">
+        <h2 style="font-size:28px;font-weight:900;color:#f39c12;margin-bottom:6px;">DIFICULTAD</h2>
+        <p style="color:#64748b;font-size:11px;margin-bottom:20px;">Elige cómo de duro quieres que sea</p>
+        <div id="difficulty-options" style="display:flex;flex-direction:column;gap:12px;width:90%;max-width:320px;">
+            <button onclick="selectDifficulty('EASY')" class="difficulty-btn" style="background:rgba(16,185,129,0.15);color:#10b981;border-color:#10b981;padding:14px;">
+                <div style="font-size:16px;font-weight:900;">🌿 FÁCIL</div>
+                <div style="font-size:10px;opacity:0.8;margin-top:2px;">Zombies lentos · +50% recompensas · Ideal para aprender</div>
+            </button>
+            <button onclick="selectDifficulty('NORMAL')" class="difficulty-btn" style="background:rgba(243,156,18,0.15);color:#f39c12;border-color:#f39c12;padding:14px;">
+                <div style="font-size:16px;font-weight:900;">⚔️ NORMAL</div>
+                <div style="font-size:10px;opacity:0.8;margin-top:2px;">La experiencia estándar · Recompensas normales</div>
+            </button>
+            <button onclick="selectDifficulty('HARD')" class="difficulty-btn" style="background:rgba(239,68,68,0.15);color:#ef4444;border-color:#ef4444;padding:14px;">
+                <div style="font-size:16px;font-weight:900;">🔥 DIFÍCIL</div>
+                <div style="font-size:10px;opacity:0.8;margin-top:2px;">Velocidad x1.5 · Más vida · x2 recompensas</div>
+            </button>
+            <button onclick="selectDifficulty('NIGHTMARE')" class="difficulty-btn" style="background:rgba(139,92,246,0.15);color:#8b5cf6;border-color:#8b5cf6;padding:14px;">
+                <div style="font-size:16px;font-weight:900;">💜 PESADILLA</div>
+                <div style="font-size:10px;opacity:0.8;margin-top:2px;">Solo para expertos · Hordas masivas · x3 recompensas</div>
+            </button>
+        </div>
+        <button onclick="goToMenu()" class="button-control" style="background:#475569;color:white;width:160px;margin-top:16px;">← Volver</button>
+    </div>
+
+    <!-- SOPORTE -->
     <div id="support-screen" class="modal-screen">
-        <h2 class="text-3xl font-bold mb-4 text-slate-400 italic">AYUDA Y SOPORTE</h2>
-        <div class="bg-slate-800 p-6 rounded-xl w-80 text-left border border-slate-700">
-            <p class="text-sm mb-4">¡Hola <b>Usuario</b>! Si tienes algún problema con el juego o quieres reportar un bug, escríbenos:</p>
-            <div class="text-yellow-400 font-bold mb-1">EMAIL:</div>
-            <div class="text-white text-xs mb-4">soportebananashooter@gmail.com</div>
-            <div class="text-blue-400 font-bold mb-1">VERSIÓN:</div>
-            <div class="text-white text-xs">v2.0 (New Edition 2.0)</div>
+        <h2 style="font-size:28px;font-weight:900;color:#94a3b8;font-style:italic;margin-bottom:16px;">AYUDA Y SOPORTE</h2>
+        <div style="background:#0f172a;padding:20px;border-radius:12px;width:300px;text-align:left;border:1px solid #334155;">
+            <p style="font-size:13px;margin-bottom:12px;">¡Hola! Si tienes algún problema o quieres reportar un bug, escríbenos:</p>
+            <div style="color:#f39c12;font-weight:bold;font-size:11px;margin-bottom:4px;">EMAIL:</div>
+            <div style="color:white;font-size:11px;margin-bottom:12px;">support@bananashooter.game</div>
+            <div style="color:#60a5fa;font-weight:bold;font-size:11px;margin-bottom:4px;">VERSIÓN:</div>
+            <div style="color:white;font-size:11px;">v3.0 (Mega Edition)</div>
         </div>
-        <button onclick="closeModal('support-screen')" class="button-control bg-red-600 text-white w-40 mt-6">Volver</button>
+        <button onclick="closeModal('support-screen')" class="button-control" style="background:#ef4444;color:white;width:160px;margin-top:16px;">Volver</button>
     </div>
 
-    <div id="achievements-screen" class="modal-screen overflow-y-auto">
-        <h2 class="text-3xl font-bold mb-4 text-yellow-400 italic">LOGROS</h2>
-        <div id="achievements-list" class="w-full max-w-sm mb-4 px-2"></div>
-        <button onclick="closeModal('achievements-screen')" class="button-control bg-red-600 text-white w-40">Volver</button>
+    <!-- TUTORIAL OVERLAY (se superpone al canvas durante el juego) -->
+    <div id="tutorial-hint" style="display:none;position:absolute;bottom:36px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:white;padding:10px 18px;border-radius:10px;font-size:12px;font-weight:bold;text-align:center;z-index:45;border:1px solid rgba(243,156,18,0.5);pointer-events:none;max-width:90%;"></div>
+
+    <!-- NOMBRE DE USUARIO (solo primera vez tras tutorial) -->
+    <div id="username-screen" class="modal-screen" style="display:none;">
+        <div style="font-size:52px;margin-bottom:8px;">🍌</div>
+        <h2 style="font-size:26px;font-weight:900;color:#f39c12;margin-bottom:4px;">¡Tutorial completado!</h2>
+        <p style="color:#94a3b8;font-size:13px;margin-bottom:20px;">Eres todo un defensor.<br>¿Cómo quieres que te llamen?</p>
+        <input type="text" id="username-input" maxlength="12" placeholder="Tu nombre..."
+            style="width:220px;background:#0f172a;border:2px solid #f39c12;color:white;padding:12px 16px;border-radius:10px;font-size:16px;font-weight:900;text-align:center;outline:none;margin-bottom:16px;">
+        <div style="font-size:10px;color:#64748b;margin-bottom:16px;">Máximo 12 caracteres</div>
+        <button onclick="confirmUsername()" class="button-control" style="width:220px;background:linear-gradient(135deg,#10b981,#059669);color:white;font-size:14px;padding:14px;">
+            ✅ ¡Empezar a jugar!
+        </button>
     </div>
 
-    <div id="shop-screen" class="modal-screen overflow-y-auto">
-        <h2 class="text-3xl font-bold mb-2 text-yellow-400 italic text-center">TIENDA</h2>
-        <p id="shop-coins" class="text-xl mb-4 font-bold text-yellow-500 text-center">🪙 0</p>
-        <div class="w-full max-w-xs mx-auto">
-            <h3 class="text-left text-xs font-bold text-slate-400 mb-2 uppercase">Skins</h3>
-            <div id="cosmetics-grid" class="grid grid-cols-2 gap-2 pb-4"></div>
-            <h3 class="text-left text-xs font-bold text-slate-400 mb-2 uppercase border-t border-slate-700 pt-2">Sombreros</h3>
-            <div id="hats-grid" class="grid grid-cols-2 gap-2 pb-4"></div>
-            <h3 class="text-left text-xs font-bold text-slate-400 mb-2 uppercase border-t border-slate-700 pt-2">Mejoras</h3>
-            <div class="grid grid-cols-2 gap-2 mb-4">
-                <button id="buyHealBtn" class="button-control text-[10px]">Curar (30 🪙)</button>
-                <button id="buyMaxHealthBtn" class="button-control text-[10px]">+25 Vida (50 🪙)</button>
+    <!-- LOGROS -->
+    <div id="achievements-screen" class="modal-screen modal-scrollable">
+        <div style="display:flex;justify-content:space-between;align-items:center;width:100%;flex-shrink:0;margin-bottom:8px;">
+            <h2 style="font-size:24px;font-weight:900;color:#f39c12;font-style:italic;">🏆 LOGROS</h2>
+            <div id="ach-progress-text" style="font-size:11px;color:#64748b;"></div>
+        </div>
+        <div style="width:100%;background:#334155;height:4px;border-radius:2px;margin-bottom:12px;flex-shrink:0;">
+            <div id="ach-progress-bar" style="height:100%;background:linear-gradient(90deg,#f39c12,#f1c40f);border-radius:2px;transition:width 0.5s;"></div>
+        </div>
+        <div id="achievements-list" class="flex-1 overflow-y-auto w-full" style="scrollbar-width:thin;scrollbar-color:#475569 transparent;"></div>
+        <button onclick="closeModal('achievements-screen')" class="button-control flex-shrink-0" style="background:#ef4444;color:white;width:160px;margin-top:8px;">Volver</button>
+    </div>
+
+    <!-- TIENDA -->
+    <div id="shop-screen" class="modal-screen modal-scrollable">
+        <div style="display:flex;justify-content:space-between;align-items:center;width:100%;flex-shrink:0;margin-bottom:4px;">
+            <h2 style="font-size:22px;font-weight:900;color:#f39c12;font-style:italic;">🛒 TIENDA</h2>
+            <p id="shop-coins" style="font-size:18px;font-weight:900;color:#fbbf24;">🪙 0</p>
+        </div>
+        <div style="display:flex;gap:4px;margin-bottom:10px;flex-shrink:0;">
+            <button class="tab-btn active" onclick="switchShopTab('skins',this)">Skins</button>
+            <button class="tab-btn" onclick="switchShopTab('hats',this)">Sombreros</button>
+            <button class="tab-btn" onclick="switchShopTab('trails',this)">Estelas</button>
+            <button class="tab-btn" onclick="switchShopTab('upgrades',this)">Mejoras</button>
+        </div>
+        <div id="shop-content" class="flex-1 overflow-y-auto w-full" style="scrollbar-width:thin;scrollbar-color:#475569 transparent;"></div>
+        <button onclick="closeModal('shop-screen')" class="button-control flex-shrink-0" style="background:#ef4444;color:white;width:160px;margin-top:8px;">Cerrar</button>
+    </div>
+
+    <!-- PERSONALIZACIÓN -->
+    <div id="custom-screen" class="modal-screen modal-scrollable">
+        <h2 style="font-size:22px;font-weight:900;color:#a78bfa;flex-shrink:0;margin-bottom:10px;">🎨 PERSONALIZAR</h2>
+        <div class="flex-1 overflow-y-auto w-full" style="scrollbar-width:thin;scrollbar-color:#475569 transparent;max-width:300px;">
+            <div style="background:#0f172a;border-radius:10px;padding:14px;border:1px solid #334155;margin-bottom:10px;">
+                <div style="font-size:11px;color:#94a3b8;font-weight:bold;margin-bottom:10px;text-transform:uppercase;">Colores</div>
+                <div style="margin-bottom:8px;text-align:left;"><label style="font-size:12px;display:block;margin-bottom:4px;">Color Jugador</label><input type="color" id="color-player" value="#f1c40f" style="width:100%;height:32px;border-radius:6px;border:none;cursor:pointer;"></div>
+                <div style="margin-bottom:8px;text-align:left;"><label style="font-size:12px;display:block;margin-bottom:4px;">Color Zombies</label><input type="color" id="color-zombie" value="#27ae60" style="width:100%;height:32px;border-radius:6px;border:none;cursor:pointer;"></div>
+                <div style="text-align:left;"><label style="font-size:12px;display:block;margin-bottom:4px;">Color Base</label><input type="color" id="color-base" value="#3498db" style="width:100%;height:32px;border-radius:6px;border:none;cursor:pointer;"></div>
+            </div>
+            <div style="background:#0f172a;border-radius:10px;padding:14px;border:1px solid #334155;margin-bottom:10px;">
+                <div style="font-size:11px;color:#94a3b8;font-weight:bold;margin-bottom:10px;text-transform:uppercase;">Nombre del Jugador</div>
+                <input type="text" id="player-name-input" maxlength="12" placeholder="Tu nombre..." style="width:100%;background:#1e293b;border:1px solid #334155;color:white;padding:8px;border-radius:6px;font-size:13px;text-align:center;">
+            </div>
+            <div style="background:#0f172a;border-radius:10px;padding:14px;border:1px solid #334155;margin-bottom:10px;">
+                <div style="font-size:11px;color:#94a3b8;font-weight:bold;margin-bottom:10px;text-transform:uppercase;">Forma del Jugador</div>
+                <div id="shape-selector" style="display:flex;gap:8px;justify-content:center;"></div>
+            </div>
+            <div style="background:#0f172a;border-radius:10px;padding:14px;border:1px solid #334155;">
+                <div style="font-size:11px;color:#94a3b8;font-weight:bold;margin-bottom:10px;text-transform:uppercase;">Forma de los Proyectiles</div>
+                <div id="bullet-selector" style="display:flex;gap:8px;justify-content:center;"></div>
             </div>
         </div>
-        <button onclick="closeModal('shop-screen')" class="button-control bg-red-600 text-white w-40">Cerrar</button>
+        <button onclick="closeModal('custom-screen')" class="button-control flex-shrink-0" style="background:#475569;color:white;width:160px;margin-top:10px;">Aplicar</button>
     </div>
 
+    <!-- PAUSA -->
     <div id="pause-screen" class="modal-screen">
-        <h2 class="text-4xl font-bold mb-6">PAUSA</h2>
-        <button onclick="togglePause()" class="button-control w-64 bg-green-600 text-white">Reanudar</button>
-        <button onclick="exitToMenu()" class="button-control w-64 bg-red-600 text-white">Menú Principal</button>
+        <h2 style="font-size:36px;font-weight:900;margin-bottom:20px;">⏸ PAUSA</h2>
+        <div id="pause-stats" style="background:#0f172a;border-radius:10px;padding:12px;width:240px;margin-bottom:16px;border:1px solid #334155;font-size:11px;color:#94a3b8;text-align:left;"></div>
+        <button onclick="togglePause()" class="button-control" style="width:220px;background:linear-gradient(135deg,#10b981,#059669);color:white;">▶ Reanudar</button>
+        <button onclick="exitToMenu()" class="button-control" style="width:220px;background:#ef4444;color:white;">🏠 Menú Principal</button>
     </div>
 
+    <!-- VICTORIA -->
     <div id="victory-screen" class="modal-screen">
-        <h2 class="text-4xl font-bold text-green-400 mb-2 italic">¡Nivel Superado!</h2>
-        <p id="victory-reward" class="text-xl mb-6 text-yellow-400">+50 Monedas</p>
-        <button id="nextBtn" class="button-control w-64">Siguiente</button>
+        <div style="font-size:48px;margin-bottom:4px;">🎉</div>
+        <h2 style="font-size:32px;font-weight:900;color:#4ade80;font-style:italic;margin-bottom:8px;">¡Nivel Superado!</h2>
+        <div id="victory-stars" style="font-size:28px;margin-bottom:8px;"></div>
+        <div id="victory-stats" style="background:#0f172a;border-radius:10px;padding:14px;width:260px;margin-bottom:14px;border:1px solid #334155;font-size:12px;text-align:left;"></div>
+        <button id="nextBtn" class="button-control" style="width:220px;">▶ Siguiente Nivel</button>
+        <button onclick="goToMenu()" class="button-control" style="width:220px;background:#475569;color:white;">🏠 Menú</button>
     </div>
 
+    <!-- GAME OVER -->
     <div id="game-over-screen" class="modal-screen">
-        <h1 class="text-4xl font-black text-red-500 mb-4 italic">BASE CAÍDA</h1>
-        <button onclick="location.reload()" class="button-control w-64">Reintentar</button>
+        <div style="font-size:48px;margin-bottom:8px;">💀</div>
+        <h1 style="font-size:36px;font-weight:900;color:#ef4444;font-style:italic;margin-bottom:8px;">BASE CAÍDA</h1>
+        <div id="gameover-stats" style="background:#0f172a;border-radius:10px;padding:14px;width:260px;margin-bottom:14px;border:1px solid #334155;font-size:12px;text-align:left;"></div>
+        <button onclick="retryGame()" class="button-control" style="width:220px;">🔄 Reintentar</button>
+        <button onclick="goToMenu()" class="button-control" style="width:220px;background:#475569;color:white;">🏠 Menú</button>
     </div>
 
+    <!-- NIVELES -->
     <div id="levels-screen" class="modal-screen">
-        <h2 id="world-title" class="text-3xl font-bold mb-4 text-blue-400">Mundo 1</h2>
-        <div id="levels-grid" class="grid grid-cols-5 gap-2 mb-6 px-2"></div>
-        <div class="flex gap-2">
-            <button id="prevWorld" class="button-control bg-slate-700 text-white">Ant.</button>
-            <button id="nextWorld" class="button-control bg-slate-700 text-white">Sig.</button>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
+            <button id="prevWorld" class="button-control" style="background:#334155;color:white;padding:6px 12px;margin:0;">◀</button>
+            <h2 id="world-title" style="font-size:24px;font-weight:900;color:#60a5fa;min-width:120px;">Mundo 1</h2>
+            <button id="nextWorld" class="button-control" style="background:#334155;color:white;padding:6px 12px;margin:0;">▶</button>
         </div>
-        <button onclick="closeModal('levels-screen')" class="button-control bg-slate-600 text-white w-40 mt-4">Volver</button>
+        <div id="world-desc" style="color:#64748b;font-size:11px;margin-bottom:12px;"></div>
+        <div id="levels-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px;padding:0 8px;"></div>
+        <button onclick="closeModal('levels-screen')" class="button-control" style="background:#475569;color:white;width:160px;">Volver</button>
     </div>
 
-    <div id="custom-screen" class="modal-screen">
-        <h2 class="text-3xl font-bold mb-4 text-purple-400">Personalizar</h2>
-        <div class="w-full max-w-xs space-y-4 text-left text-sm">
-            <div><label>Color Jugador</label><input type="color" id="color-player" value="#f1c40f" class="w-full h-8 block"></div>
-            <div><label>Color Zombis</label><input type="color" id="color-zombie" value="#27ae60" class="w-full h-8 block"></div>
-            <div><label>Color Base</label><input type="color" id="color-base" value="#3498db" class="w-full h-8 block"></div>
-        </div>
-        <button onclick="closeModal('custom-screen')" class="button-control bg-slate-600 text-white w-40 mt-6">Aplicar</button>
+    <!-- ESTADÍSTICAS -->
+    <div id="stats-screen" class="modal-screen modal-scrollable">
+        <h2 style="font-size:24px;font-weight:900;color:#38bdf8;font-style:italic;margin-bottom:12px;flex-shrink:0;">📊 ESTADÍSTICAS</h2>
+        <div id="stats-content" class="flex-1 overflow-y-auto w-full" style="scrollbar-width:thin;scrollbar-color:#475569 transparent;max-width:320px;"></div>
+        <button onclick="closeModal('stats-screen')" class="button-control flex-shrink-0" style="background:#ef4444;color:white;width:160px;margin-top:8px;">Volver</button>
     </div>
 
-    <div class="p-2 w-full bg-slate-900 flex justify-between text-white text-[10px] uppercase font-bold tracking-widest">
-        <div id="hud-left">M1-N1 | 🪙 0</div>
-        <div id="hud-right">ZOMBIS: 0/10</div>
+    <!-- BOSS RESULT -->
+    <div id="boss-screen" class="modal-screen">
+        <div id="boss-result-icon" style="font-size:56px;margin-bottom:8px;">👹</div>
+        <h2 id="boss-result-title" style="font-size:28px;font-weight:900;margin-bottom:8px;">JEFE DERROTADO</h2>
+        <div id="boss-result-stats" style="background:#0f172a;border-radius:10px;padding:14px;width:260px;margin-bottom:14px;border:1px solid #334155;font-size:12px;text-align:left;"></div>
+        <button onclick="goToMenu()" class="button-control" style="width:220px;">🏠 Menú</button>
     </div>
-</div>
+
+    <!-- HUD -->
+    <div id="hud-bar" style="padding:4px 8px;width:100%;background:#0f172a;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #1e293b;">
+        <div id="hud-left" style="color:white;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1px;">M1-N1 | 🪙 0</div>
+        <div id="hud-mode" style="color:#64748b;font-size:9px;font-weight:bold;"></div>
+        <div id="hud-right" style="color:white;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1px;">ZOMBIES: 0</div>
+    </div>
+</div><!-- /game-container -->
+</div><!-- /game-wrapper -->
 
 <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = 600; canvas.height = 400;
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
-    // --- PERSISTENCIA ---
-    let coins = parseInt(localStorage.getItem('banana_coins')) || 0;
-    let unlockedLevel = parseInt(localStorage.getItem('banana_unlocked')) || 1;
-    let totalKills = parseInt(localStorage.getItem('banana_total_kills')) || 0;
-    let ownedSkins = JSON.parse(localStorage.getItem('banana_owned_skins')) || ['DEFAULT'];
-    let ownedHats = JSON.parse(localStorage.getItem('banana_owned_hats')) || ['NONE'];
-    let unlockedAchievements = JSON.parse(localStorage.getItem('banana_achievements')) || [];
-    let claimedRewards = JSON.parse(localStorage.getItem('banana_claimed_rewards')) || [];
-    let shopActivity = JSON.parse(localStorage.getItem('banana_shop_activity')) || { skin: false, hat: false, upgrade: false };
+// Coordenadas lógicas del juego — NUNCA cambian
+const GAME_W = 600;
+const GAME_H = 400;
 
-    let config = {
-        playerColor: localStorage.getItem('c_player') || '#f1c40f',
-        zombieColor: localStorage.getItem('c_zombie') || '#27ae60',
-        baseColor: localStorage.getItem('c_base') || '#3498db',
-        activeSkin: localStorage.getItem('c_skin') || 'DEFAULT',
-        activeHat: localStorage.getItem('c_hat') || 'NONE'
-    };
+// dpr actual (puede cambiar si mueves la ventana entre monitores)
+let dpr = 1;
 
-    const SKINS = {
-        'DEFAULT': { name: 'Estandar', price: 0, color: '#f1c40f' },
-        'NINJA': { name: 'Ninja', price: 150, color: '#000000' },
-        'KNIGHT': { name: 'Caballero', price: 300, color: '#bdc3c7' },
-        'ALIEN': { name: 'Visitante', price: 500, color: '#a29bfe' },
-        'ROBOT': { name: 'Mecha-Lemor', price: 800, color: '#00cec9' },
-        'GHOST': { name: 'Espectro', price: 1200, color: 'rgba(255,255,255,0.5)' },
-        'GOLDEN': { name: 'Banana Oro', price: 5000, color: '#ffd700' }
-    };
+let currentCssScale = 1;
 
-    const HATS = {
-        'NONE': { name: 'Sin Sombrero', price: 0, color: 'transparent' },
-        'CAP': { name: 'Gorra Roja', price: 100, color: '#ff0000' },
-        'CROWN': { name: 'Corona', price: 400, color: '#f1c40f' },
-        'VIKING': { name: 'Vikingo', price: 700, color: '#7f8c8d' },
-        'HALO': { name: 'Halo', price: 1000, color: '#81ecec' }
-    };
+// Desactivar suavizado — evita el blur en escalado
+ctx.imageSmoothingEnabled = false;
 
-    const ACHIEVEMENTS_DATA = [
-        { id: 1, name: "¿Qué es esto?", desc: "Mata a tu primer zombie", reward: 50 },
-        { id: 2, name: "Sanguinario", desc: "Mata a 20 zombies", reward: 200 },
-        { id: 3, name: "El trio", desc: "Mata a 3 zombies en 2 segundos", reward: 150 },
-        { id: 4, name: "¡Que velocidad!", desc: "Mata a un zombie veloz", reward: 100 },
-        { id: 5, name: "¡A vestirse!", desc: "Compra 1 cosmético", reward: 300 },
-        { id: 6, name: "Exterminador", desc: "Completa el primer mundo", reward: 1000 },
-        { id: 7, name: "Infinito", desc: "Desbloquea el modo infinito", reward: 500 },
-        { id: 8, name: "¡Mejorado!", desc: "Acepta un suministro táctico", reward: 100 },
-        { id: 9, name: "De compras", desc: "Compra 1 artículo de cada tipo", reward: 500 },
-        { id: 10, name: "Sin rendirse", desc: "Pierde una partida", reward: 50 },
-        { id: 11, name: "Bananeitor", desc: "Mata a 50 zombies", reward: 400 },
-        { id: 12, name: "Que no pare la fiesta", desc: "Llega a la oleada 20 en infinito", reward: 1000 },
-        { id: 13, name: "Soy rico", desc: "Acumula 100 monedas", reward: 200 },
-        { id: 14, name: "¡Más vida!", desc: "Compra la mejora de vida", reward: 150 },
-        { id: 16, name: "Destructor de mundos", desc: "Completa el mundo 2", reward: 2000 },
-        { id: 17, name: "Soy una bala", desc: "Acepta una mejora de velocidad", reward: 150 },
-        { id: 18, name: "En racha", desc: "Mata 10 zombies en 3s (Infinito)", reward: 800 }
-    ];
+function resizeGame() {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const padding   = 16;
+    const hudH      = 26;
+    const xpH       = 6;
+    const hpH       = 14;
+    const totalFixedH = hudH + xpH + hpH + padding * 2;
 
-    const PU_TYPES = [
-        { id: 'HEAL', name: 'BOTIQUÍN TÁCTICO', desc: 'Repara 40 puntos de la base.', icon: '+', color: '#10b981' },
-        { id: 'SPEED', name: 'ADRENALINA', desc: 'Aumenta tu velocidad por 5 segundos.', icon: 'S', color: '#f59e0b' },
-        { id: 'GOLD', name: 'BOLSA DE ORO', desc: 'Encuentras 100 monedas extra.', icon: '🪙', color: '#eab308' }
-    ];
+    const maxW = vw - padding * 2;
+    const maxH = vh - totalFixedH;
 
-    // --- FUNCIONES INTERFAZ ---
-    function openSupport() {
-        document.getElementById('main-menu-screen').style.display = 'none';
-        document.getElementById('support-screen').style.display = 'flex';
+    const scaleByW = maxW / GAME_W;
+    const scaleByH = maxH / GAME_H;
+    currentCssScale = Math.min(scaleByW, scaleByH);
+
+    const displayW = Math.floor(GAME_W * currentCssScale);
+    const displayH = Math.floor(GAME_H * currentCssScale);
+
+    dpr = Math.min(window.devicePixelRatio || 1, 3);
+
+    canvas.width  = Math.round(displayW * dpr);
+    canvas.height = Math.round(displayH * dpr);
+
+    canvas.style.width  = displayW + 'px';
+    canvas.style.height = displayH + 'px';
+
+    const container = document.getElementById('game-container');
+    container.style.width = displayW + 'px';
+    // No aplicar scale aquí — se aplica al inicio de cada draw()
+}
+
+resizeGame();
+window.addEventListener('resize', resizeGame);
+
+// ============================
+// PERSISTENCIA
+// ============================
+let coins          = parseInt(localStorage.getItem('bs_coins')) || 0;
+let unlockedLevel  = parseInt(localStorage.getItem('bs_unlocked')) || 1;
+let totalKills     = parseInt(localStorage.getItem('bs_total_kills')) || 0;
+let totalGames     = parseInt(localStorage.getItem('bs_total_games')) || 0;
+let totalWins      = parseInt(localStorage.getItem('bs_total_wins')) || 0;
+let bestWave       = parseInt(localStorage.getItem('bs_best_wave')) || 0;
+let totalPlayTime  = parseInt(localStorage.getItem('bs_play_time')) || 0;
+let playerXP       = parseInt(localStorage.getItem('bs_xp')) || 0;
+let playerLevel    = parseInt(localStorage.getItem('bs_level')) || 1;
+let ownedSkins     = JSON.parse(localStorage.getItem('bs_owned_skins')) || ['DEFAULT'];
+let ownedHats      = JSON.parse(localStorage.getItem('bs_owned_hats')) || ['NONE'];
+let ownedTrails    = JSON.parse(localStorage.getItem('bs_owned_trails')) || ['NONE'];
+let unlockedAchievements = JSON.parse(localStorage.getItem('bs_achievements')) || [];
+let claimedRewards = JSON.parse(localStorage.getItem('bs_claimed_rewards')) || [];
+let shopActivity   = JSON.parse(localStorage.getItem('bs_shop_activity')) || { skin: false, hat: false, trail: false, upgrade: false };
+let lastDailyDate  = localStorage.getItem('bs_daily_date') || '';
+let dailyStreak    = parseInt(localStorage.getItem('bs_daily_streak')) || 0;
+let killsByDifficulty = JSON.parse(localStorage.getItem('bs_kills_diff')) || { EASY:0, NORMAL:0, HARD:0, NIGHTMARE:0 };
+let bossesDefeated = parseInt(localStorage.getItem('bs_bosses')) || 0;
+let survivalBest   = parseInt(localStorage.getItem('bs_survival_best')) || 0;
+// Tutorial
+let tutorialDone   = localStorage.getItem('bs_tutorial_done') === 'true';
+let isFirstTime    = !tutorialDone;
+
+let config = {
+    playerColor: localStorage.getItem('c_player') || '#f1c40f',
+    zombieColor: localStorage.getItem('c_zombie') || '#27ae60',
+    baseColor:   localStorage.getItem('c_base') || '#3498db',
+    activeSkin:  localStorage.getItem('c_skin') || 'DEFAULT',
+    activeHat:   localStorage.getItem('c_hat') || 'NONE',
+    activeTrail: localStorage.getItem('c_trail') || 'NONE',
+    playerShape: localStorage.getItem('c_shape') || 'SQUARE',
+    bulletShape: localStorage.getItem('c_bullet') || 'CIRCLE',
+    playerName:  localStorage.getItem('c_name') || 'Jugador'
+};
+
+// ============================
+// DATOS: SKINS, SOMBREROS, ESTELAS
+// ============================
+const SKINS = {
+    'DEFAULT': { name: 'Estándar',     price: 0,    color: '#f1c40f', emoji: '🟡' },
+    'NINJA':   { name: 'Ninja',        price: 150,  color: '#1a1a2e', emoji: '🥷' },
+    'KNIGHT':  { name: 'Caballero',    price: 300,  color: '#bdc3c7', emoji: '🛡️' },
+    'ALIEN':   { name: 'Visitante',    price: 500,  color: '#a29bfe', emoji: '👽' },
+    'ROBOT':   { name: 'Mecha-Lemor',  price: 800,  color: '#00cec9', emoji: '🤖' },
+    'GHOST':   { name: 'Espectro',     price: 1200, color: 'rgba(200,200,255,0.6)', emoji: '👻' },
+    'GOLDEN':  { name: 'Banana Oro',   price: 5000, color: '#ffd700', emoji: '✨' },
+    'DEMON':   { name: 'Demonio',      price: 2500, color: '#dc2626', emoji: '😈' },
+    'ICE':     { name: 'Glaciar',      price: 1800, color: '#7dd3fc', emoji: '❄️' },
+    'LAVA':    { name: 'Magma',        price: 3500, color: '#fb923c', emoji: '🌋' },
+};
+const HATS = {
+    'NONE':   { name: 'Sin sombrero', price: 0,    color: 'transparent', emoji: '➖' },
+    'CAP':    { name: 'Gorra Roja',   price: 100,  color: '#ff0000', emoji: '🧢' },
+    'CROWN':  { name: 'Corona',       price: 400,  color: '#f1c40f', emoji: '👑' },
+    'VIKING': { name: 'Vikingo',      price: 700,  color: '#7f8c8d', emoji: '⛑️' },
+    'HALO':   { name: 'Halo',         price: 1000, color: '#81ecec', emoji: '😇' },
+    'WITCH':  { name: 'Bruja',        price: 800,  color: '#6d28d9', emoji: '🧙' },
+    'PARTY':  { name: 'Fiesta',       price: 300,  color: '#f472b6', emoji: '🎉' },
+    'COWBOY': { name: 'Vaquero',      price: 600,  color: '#92400e', emoji: '🤠' },
+};
+const TRAILS = {
+    'NONE':   { name: 'Sin Estela',   price: 0,    color: 'transparent', emoji: '➖' },
+    'FIRE':   { name: 'Fuego',        price: 400,  color: '#f97316', emoji: '🔥' },
+    'ICE':    { name: 'Hielo',        price: 400,  color: '#38bdf8', emoji: '❄️' },
+    'STAR':   { name: 'Estrella',     price: 600,  color: '#fbbf24', emoji: '⭐' },
+    'POISON': { name: 'Veneno',       price: 500,  color: '#4ade80', emoji: '☠️' },
+    'RAINBOW':{ name: 'Arcoíris',     price: 1500, color: 'rainbow',  emoji: '🌈' },
+};
+
+// ============================
+// LOGROS
+// ============================
+const ACHIEVEMENTS_DATA = [
+    // Kills
+    { id: 1,  name: "Primer Sangre",        desc: "Mata tu primer zombie",            reward: 50,   icon: "🩸" },
+    { id: 2,  name: "Sanguinario",          desc: "Mata 20 zombies en total",         reward: 200,  icon: "⚔️" },
+    { id: 11, name: "Bananeitor",           desc: "Mata 50 zombies en total",         reward: 400,  icon: "🍌" },
+    { id: 19, name: "Genocida",             desc: "Mata 200 zombies en total",        reward: 1000, icon: "💀" },
+    { id: 20, name: "El Exterminador",      desc: "Mata 500 zombies en total",        reward: 2500, icon: "🔱" },
+    // Combos / velocidad
+    { id: 3,  name: "El Trío",              desc: "Mata 3 zombies en 2 segundos",     reward: 150,  icon: "⚡" },
+    { id: 4,  name: "¡Qué velocidad!",      desc: "Mata un zombie veloz",             reward: 100,  icon: "💨" },
+    { id: 18, name: "En Racha",             desc: "Mata 10 zombies en 3s (Infinito)", reward: 800,  icon: "🔥" },
+    { id: 21, name: "IMPARABLE",            desc: "Consigue un combo x10",            reward: 500,  icon: "🌟" },
+    { id: 22, name: "DIOS DE LA GUERRA",    desc: "Consigue un combo x20",            reward: 2000, icon: "⚔️" },
+    // Niveles y mundos
+    { id: 6,  name: "Exterminador M1",      desc: "Completa el primer mundo",         reward: 1000, icon: "🌍" },
+    { id: 16, name: "Destructor M2",        desc: "Completa el mundo 2",              reward: 2000, icon: "🌎" },
+    { id: 23, name: "Conquistador M3",      desc: "Completa el mundo 3",              reward: 5000, icon: "🌏" },
+    { id: 7,  name: "Infinito",             desc: "Desbloquea modo infinito",         reward: 500,  icon: "♾️" },
+    // Modos especiales
+    { id: 12, name: "¡Que no pare!",        desc: "Llega a oleada 20 en Infinito",    reward: 1000, icon: "🌊" },
+    { id: 24, name: "Superviviente",        desc: "Sobrevive 120s en Supervivencia",  reward: 1500, icon: "🛡️" },
+    { id: 25, name: "Cazador de Jefes",     desc: "Derrota a tu primer jefe",         reward: 2000, icon: "👹" },
+    { id: 26, name: "Jefe Maestro",         desc: "Derrota a 5 jefes",               reward: 5000, icon: "💪" },
+    { id: 27, name: "Pesadilla",            desc: "Completa un nivel en Pesadilla",   reward: 3000, icon: "💜" },
+    // Dificultad
+    { id: 28, name: "A lo difícil",         desc: "Mata 50 zombies en Difícil+",      reward: 1200, icon: "🔥" },
+    // Tienda / cosméticos
+    { id: 5,  name: "¡A vestirse!",         desc: "Compra tu primer cosmético",       reward: 300,  icon: "👗" },
+    { id: 9,  name: "De Compras",           desc: "Compra 1 artículo de cada tipo",   reward: 500,  icon: "🛒" },
+    { id: 29, name: "Coleccionista",        desc: "Posee 5 skins distintas",          reward: 2000, icon: "🎭" },
+    // PowerUps
+    { id: 8,  name: "¡Mejorado!",           desc: "Acepta un suministro táctico",     reward: 100,  icon: "💊" },
+    { id: 17, name: "Soy una Bala",         desc: "Acepta una mejora de velocidad",   reward: 150,  icon: "🚀" },
+    { id: 30, name: "Farmacéutico",         desc: "Acepta 10 suministros",            reward: 800,  icon: "⚕️" },
+    // Economía
+    { id: 13, name: "Algo de Calderilla",   desc: "Acumula 100 monedas",              reward: 200,  icon: "🪙" },
+    { id: 31, name: "Millonario",           desc: "Acumula 5000 monedas",             reward: 1000, icon: "💰" },
+    { id: 14, name: "¡Más vida!",           desc: "Compra la mejora de vida",         reward: 150,  icon: "❤️" },
+    // Racha diaria
+    { id: 32, name: "Puntual",              desc: "Reclama tu recompensa diaria",     reward: 200,  icon: "📅" },
+    { id: 33, name: "Constante",            desc: "7 días seguidos de recompensa",    reward: 1500, icon: "🗓️" },
+    // Game over
+    { id: 10, name: "Sin rendirse",         desc: "Pierde una partida",               reward: 50,   icon: "💔" },
+    // Nivel de jugador
+    { id: 34, name: "Aprendiz",             desc: "Llega al nivel 5",                 reward: 500,  icon: "📈" },
+    { id: 35, name: "Veterano",             desc: "Llega al nivel 10",                reward: 2000, icon: "🎖️" },
+    // Otros
+    { id: 15, name: "Sin daño",             desc: "Completa un nivel sin recibir daño",reward: 1000, icon: "🛡️" },
+    { id: 36, name: "Curioso",              desc: "Abre todas las secciones del menú",reward: 300,  icon: "🔍" },
+    { id: 37, name: "¡Bienvenido!",         desc: "Completa el tutorial",              reward: 100,  icon: "🎓" },
+];
+
+// ============================
+// POWER UPS
+// ============================
+const PU_TYPES = [
+    { id: 'HEAL',      name: 'BOTIQUÍN TÁCTICO',  desc: 'Repara 50 puntos de la base.',        icon: '❤️', color: '#10b981' },
+    { id: 'SPEED',     name: 'ADRENALINA',         desc: 'Velocidad x2 durante 6 segundos.',    icon: '⚡', color: '#f59e0b' },
+    { id: 'GOLD',      name: 'BOLSA DE ORO',       desc: 'Encuentras 150 monedas extra.',        icon: '🪙', color: '#eab308' },
+    { id: 'DAMAGE',    name: 'FURIA',              desc: 'Daño x3 durante 8 segundos.',         icon: '⚔️', color: '#ef4444' },
+    { id: 'SHIELD',    name: 'ESCUDO',             desc: 'Inmunidad 5 segundos.',               icon: '🛡️', color: '#6366f1' },
+    { id: 'FREEZE',    name: 'CONGELACIÓN',        desc: 'Congela todos los zombies 3 segundos.',icon:'❄️', color: '#38bdf8' },
+];
+
+// ============================
+// TIPOS DE ZOMBIE
+// ============================
+const ZOMBIE_TYPES = {
+    NORMAL:  { color: null,       speedMult: 1.0, hpMult: 1,   size: 20, reward: 5,  name: 'Normal'   },
+    FAST:    { color: '#ff4d4d',  speedMult: 2.2, hpMult: 0.7, size: 16, reward: 8,  name: 'Veloz'    },
+    TANK:    { color: '#92400e',  speedMult: 0.5, hpMult: 5,   size: 28, reward: 20, name: 'Tanque'   },
+    NINJA_Z: { color: '#1e3a5f',  speedMult: 1.8, hpMult: 1.5, size: 18, reward: 12, name: 'Sigiloso' },
+    EXPLODE: { color: '#fbbf24',  speedMult: 0.8, hpMult: 2,   size: 22, reward: 15, name: 'Bomba'    },
+    GHOST_Z: { color: 'rgba(180,180,255,0.5)', speedMult: 1.2, hpMult: 1.2, size: 20, reward: 10, name: 'Fantasma' },
+};
+
+const WORLD_DATA = [
+    { name: "Los Jardines", desc: "Fácil. Aprende los controles.", bg: ['#1a2744','#0f2030'], baseColor: '#3498db' },
+    { name: "El Desierto",  desc: "Calor extremo y zombies rápidos.", bg: ['#451a03','#2d1200'], baseColor: '#d97706' },
+    { name: "El Infierno",  desc: "Solo los mejores llegan aquí.", bg: ['#3b0000','#1a0000'], baseColor: '#dc2626' },
+];
+
+// ============================
+// SISTEMA XP / NIVEL
+// ============================
+const XP_PER_LEVEL = 200;
+function xpForLevel(lvl) { return lvl * XP_PER_LEVEL; }
+function addXP(amount) {
+    playerXP += amount;
+    const needed = xpForLevel(playerLevel);
+    if (playerXP >= needed) {
+        playerXP -= needed;
+        playerLevel++;
+        localStorage.setItem('bs_level', playerLevel);
+        showToast(`¡Nivel ${playerLevel}! ⬆️`, '#6366f1');
+        if (playerLevel >= 5)  checkAchievement(34);
+        if (playerLevel >= 10) checkAchievement(35);
     }
+    localStorage.setItem('bs_xp', playerXP);
+    updateXPBar();
+}
+function updateXPBar() {
+    const pct = (playerXP / xpForLevel(playerLevel)) * 100;
+    document.getElementById('xp-bar').style.width = pct + '%';
+    document.getElementById('player-level-display').innerText = `⬆️ Nivel ${playerLevel}  •  ${playerXP}/${xpForLevel(playerLevel)} XP`;
+}
 
-    function showToast(name) {
-        const toast = document.getElementById('achievement-toast');
-        document.getElementById('toast-name').innerText = name;
-        toast.style.top = "0px";
-        setTimeout(() => { toast.style.top = "-100px"; }, 3000);
+// ============================
+// RECOMPENSA DIARIA
+// ============================
+function checkDailyReward() {
+    const today = new Date().toDateString();
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    const btn = document.getElementById('daily-reward-btn');
+    if (lastDailyDate !== today) {
+        btn.style.display = 'block';
+        if (lastDailyDate !== yesterday) dailyStreak = 0;
+    } else {
+        btn.style.display = 'none';
     }
+}
+function claimDailyReward() {
+    const today = new Date().toDateString();
+    if (lastDailyDate === today) return;
+    dailyStreak++;
+    const base = 100 + (dailyStreak - 1) * 50;
+    const reward = Math.min(base, 500);
+    coins += reward; saveCoins();
+    lastDailyDate = today;
+    localStorage.setItem('bs_daily_date', today);
+    localStorage.setItem('bs_daily_streak', dailyStreak);
+    document.getElementById('daily-reward-btn').style.display = 'none';
+    showDailyToast(`+${reward} 🪙  (Racha: ${dailyStreak} días)`);
+    checkAchievement(32);
+    if (dailyStreak >= 7) checkAchievement(33);
+    addXP(30);
+}
+function showDailyToast(msg) {
+    const t = document.getElementById('daily-toast');
+    document.getElementById('daily-toast-name').innerText = msg;
+    t.style.top = '50px';
+    setTimeout(() => { t.style.top = '-90px'; }, 3500);
+}
 
-    function checkAchievement(id) {
-        if (!unlockedAchievements.includes(id)) {
-            unlockedAchievements.push(id);
-            localStorage.setItem('banana_achievements', JSON.stringify(unlockedAchievements));
-            const ach = ACHIEVEMENTS_DATA.find(a => a.id === id);
-            showToast(ach.name);
-        }
-    }
-
-    function claimReward(id) {
+// ============================
+// TOASTS / LOGROS
+// ============================
+let toastQueue = [];
+let toastShowing = false;
+function showToast(name, color) {
+    toastQueue.push({ name, color: color || '#f39c12' });
+    if (!toastShowing) processToastQueue();
+}
+function processToastQueue() {
+    if (!toastQueue.length) { toastShowing = false; return; }
+    toastShowing = true;
+    const { name, color } = toastQueue.shift();
+    const toast = document.getElementById('achievement-toast');
+    toast.style.background = `linear-gradient(135deg, ${color}, ${color}cc)`;
+    document.getElementById('toast-name').innerText = name;
+    toast.style.top = '12px';
+    setTimeout(() => {
+        toast.style.top = '-90px';
+        setTimeout(processToastQueue, 600);
+    }, 2500);
+}
+function checkAchievement(id) {
+    // Durante el tutorial solo se puede desbloquear el logro de completarlo (id 37)
+    if (gameMode === 'TUTORIAL' && id !== 37) return;
+    if (!unlockedAchievements.includes(id)) {
+        unlockedAchievements.push(id);
+        localStorage.setItem('bs_achievements', JSON.stringify(unlockedAchievements));
         const ach = ACHIEVEMENTS_DATA.find(a => a.id === id);
-        if (unlockedAchievements.includes(id) && !claimedRewards.includes(id)) {
-            coins += ach.reward;
-            claimedRewards.push(id);
-            localStorage.setItem('banana_claimed_rewards', JSON.stringify(claimedRewards));
-            saveCoins();
-            renderAchievements();
-        }
+        if (ach) { showToast(`${ach.icon} ${ach.name}`); addXP(50); }
+        updateLogrosNotif();
     }
+}
+function claimReward(id) {
+    const ach = ACHIEVEMENTS_DATA.find(a => a.id === id);
+    if (!ach || !unlockedAchievements.includes(id) || claimedRewards.includes(id)) return;
+    coins += ach.reward; claimedRewards.push(id);
+    localStorage.setItem('bs_claimed_rewards', JSON.stringify(claimedRewards));
+    saveCoins(); renderAchievements();
+}
+function updateLogrosNotif() {
+    const unclaimed = unlockedAchievements.filter(id => !claimedRewards.includes(id)).length;
+    const dot = document.getElementById('logros-dot');
+    if (dot) dot.style.display = unclaimed > 0 ? 'inline-block' : 'none';
+}
 
-    function renderAchievements() {
-        const list = document.getElementById('achievements-list');
-        list.innerHTML = '';
-        ACHIEVEMENTS_DATA.forEach(ach => {
-            const isUnlocked = unlockedAchievements.includes(ach.id);
-            const isClaimed = claimedRewards.includes(ach.id);
-            const div = document.createElement('div');
-            div.className = `achievement-item ${isUnlocked ? 'achievement-unlocked' : 'opacity-40'}`;
-            let btnHtml = isUnlocked && !isClaimed ? `<button onclick="claimReward(${ach.id})" class="bg-green-500 text-[8px] px-2 py-1 rounded text-white font-bold">RECLAMAR</button>` : (isClaimed ? `<span class="text-green-400 text-[8px] font-bold">COBRADO</span>` : `<span class="text-slate-400 text-[8px]">${ach.reward}🪙</span>`);
-            div.innerHTML = `<div><div class="text-xs font-black text-yellow-400 uppercase">${ach.name}</div><div class="text-[9px] text-slate-300">${ach.desc}</div></div><div>${btnHtml}</div>`;
-            list.appendChild(div);
+// ============================
+// TIENDA
+// ============================
+let currentShopTab = 'skins';
+function switchShopTab(tab, btn) {
+    currentShopTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderShopTab();
+}
+function renderShop() {
+    document.getElementById('shop-coins').innerText = `🪙 ${coins}`;
+    renderShopTab();
+}
+function renderShopTab() {
+    const content = document.getElementById('shop-content');
+    content.innerHTML = '';
+    document.getElementById('shop-coins').innerText = `🪙 ${coins}`;
+    if (currentShopTab === 'skins') renderCosmeticGrid(content, SKINS, ownedSkins, config.activeSkin, 'skin');
+    else if (currentShopTab === 'hats') renderCosmeticGrid(content, HATS, ownedHats, config.activeHat, 'hat');
+    else if (currentShopTab === 'trails') renderCosmeticGrid(content, TRAILS, ownedTrails, config.activeTrail, 'trail');
+    else if (currentShopTab === 'upgrades') renderUpgrades(content);
+}
+function renderCosmeticGrid(container, data, owned, active, type) {
+    const grid = document.createElement('div');
+    grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px;';
+    for (const [id, item] of Object.entries(data)) {
+        const isOwned = owned.includes(id);
+        const isActive = active === id;
+        const card = document.createElement('div');
+        card.className = `cosmetic-card ${isActive ? 'ring-2 ring-yellow-400' : ''}`;
+        const previewBg = item.color === 'transparent' ? '#334155' : (item.color === 'rainbow' ? 'linear-gradient(90deg,#f87171,#fb923c,#fbbf24,#4ade80,#60a5fa,#c084fc)' : item.color);
+        card.innerHTML = `
+            <div style="width:36px;height:36px;border-radius:8px;background:${previewBg};display:flex;align-items:center;justify-content:center;font-size:18px;">${item.emoji}</div>
+            <span style="font-size:10px;font-weight:900;color:${isActive?'#fbbf24':'white'}">${item.name}</span>
+            <button onclick="handleItemClick('${type}','${id}')" style="font-size:9px;padding:4px 8px;border-radius:6px;border:none;cursor:pointer;width:100%;font-weight:bold;background:${isOwned?'#3b82f6':'#10b981'};color:white;">
+                ${isActive ? '✅ USANDO' : (isOwned ? '👕 EQUIPAR' : item.price + ' 🪙')}
+            </button>`;
+        grid.appendChild(card);
+    }
+    container.appendChild(grid);
+}
+function renderUpgrades(container) {
+    const upgrades = [
+        { id:'heal',     label:'❤️ Curación',         desc:'Restaura 50HP',       cost:30  },
+        { id:'maxhp',    label:'💗 +25 Vida Máx',      desc:'Permanente',          cost:50  },
+        { id:'damage',   label:'⚔️ +1 Daño',           desc:'Permanente',          cost:200 },
+        { id:'speed',    label:'💨 +1 Velocidad',       desc:'Permanente',          cost:300 },
+        { id:'bigbullet',label:'🔵 Bala Grande',        desc:'+rango, por partida', cost:100 },
+    ];
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;flex-direction:column;gap:8px;padding:4px;';
+    upgrades.forEach(u => {
+        const row = document.createElement('div');
+        row.style.cssText = 'background:#1e293b;border:1px solid #334155;border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px;';
+        row.innerHTML = `<div><div style="font-size:12px;font-weight:900;">${u.label}</div><div style="font-size:10px;color:#64748b;">${u.desc}</div></div><button onclick="buyUpgrade('${u.id}')" style="background:linear-gradient(135deg,#f39c12,#e67e22);color:#1a1a2e;padding:6px 12px;border-radius:8px;border:none;cursor:pointer;font-size:11px;font-weight:900;white-space:nowrap;">${u.cost} 🪙</button>`;
+        wrap.appendChild(row);
+    });
+    container.appendChild(wrap);
+}
+function handleItemClick(type, id) {
+    const maps = { skin: [SKINS, ownedSkins, 'activeSkin', 'bs_owned_skins', 'c_skin'], hat: [HATS, ownedHats, 'activeHat', 'bs_owned_hats', 'c_hat'], trail: [TRAILS, ownedTrails, 'activeTrail', 'bs_owned_trails', 'c_trail'] };
+    const [data, owned, configKey, storageKey, lsKey] = maps[type];
+    if (owned.includes(id)) {
+        config[configKey] = id; localStorage.setItem(lsKey, id);
+    } else if (coins >= data[id].price) {
+        coins -= data[id].price; owned.push(id); config[configKey] = id;
+        localStorage.setItem(storageKey, JSON.stringify(owned));
+        localStorage.setItem(lsKey, id);
+        shopActivity[type === 'trail' ? 'trail' : type] = true;
+        checkShopAchievements(); saveCoins(); checkAchievement(5);
+        if (type === 'skin' && ownedSkins.filter(s => s !== 'DEFAULT').length >= 4) checkAchievement(29);
+    }
+    renderShopTab();
+}
+function buyUpgrade(id) {
+    if (id === 'heal' && coins >= 30) { coins -= 30; player.hp = Math.min(player.maxHp, player.hp + 50); shopActivity.upgrade = true; checkShopAchievements(); saveCoins(); renderShopTab(); }
+    else if (id === 'maxhp' && coins >= 50) { coins -= 50; player.maxHp += 25; player.hp = Math.min(player.hp + 25, player.maxHp); shopActivity.upgrade = true; checkShopAchievements(); checkAchievement(14); saveCoins(); renderShopTab(); }
+    else if (id === 'damage' && coins >= 200) { coins -= 200; player.dmg++; shopActivity.upgrade = true; checkShopAchievements(); saveCoins(); renderShopTab(); }
+    else if (id === 'speed' && coins >= 300) { coins -= 300; player.speed++; shopActivity.upgrade = true; checkShopAchievements(); saveCoins(); renderShopTab(); }
+    else if (id === 'bigbullet' && coins >= 100) { coins -= 100; player.bigBullet = true; shopActivity.upgrade = true; checkShopAchievements(); saveCoins(); renderShopTab(); }
+}
+function checkShopAchievements() {
+    localStorage.setItem('bs_shop_activity', JSON.stringify(shopActivity));
+    if (shopActivity.skin && shopActivity.hat && shopActivity.upgrade) checkAchievement(9);
+    if (shopActivity.skin && shopActivity.hat && shopActivity.trail && shopActivity.upgrade) checkAchievement(9);
+}
+function saveCoins() {
+    localStorage.setItem('bs_coins', coins);
+    if (coins >= 100)  checkAchievement(13);
+    if (coins >= 5000) checkAchievement(31);
+}
+
+// ============================
+// LOGROS RENDER
+// ============================
+function renderAchievements() {
+    const list = document.getElementById('achievements-list');
+    list.innerHTML = '';
+    const total = ACHIEVEMENTS_DATA.length;
+    const done  = unlockedAchievements.length;
+    document.getElementById('ach-progress-text').innerText = `${done}/${total}`;
+    document.getElementById('ach-progress-bar').style.width = (done/total*100) + '%';
+
+    // Categorías
+    const cats = [
+        { label: '⚔️ Combate', ids: [1,2,11,19,20,3,4,18,21,22,15] },
+        { label: '🌍 Progreso', ids: [6,16,23,7,12,24,25,26,27,28] },
+        { label: '🛒 Tienda',   ids: [5,9,29,8,17,30,13,31,14] },
+        { label: '📅 Diario',   ids: [32,33,10,34,35,36] },
+    ];
+    cats.forEach(cat => {
+        const catDiv = document.createElement('div');
+        catDiv.innerHTML = `<div style="font-size:10px;font-weight:900;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin:8px 0 4px;">${cat.label}</div>`;
+        cat.ids.forEach(id => {
+            const ach = ACHIEVEMENTS_DATA.find(a => a.id === id);
+            if (!ach) return;
+            const isUnlocked = unlockedAchievements.includes(id);
+            const isClaimed  = claimedRewards.includes(id);
+            const row = document.createElement('div');
+            row.className = `achievement-item ${isUnlocked ? 'achievement-unlocked' : ''}`;
+            row.style.opacity = isUnlocked ? '1' : '0.4';
+            let btn = isUnlocked && !isClaimed
+                ? `<button onclick="claimReward(${id})" style="background:#10b981;color:white;border:none;border-radius:6px;padding:4px 8px;font-size:9px;font-weight:900;cursor:pointer;white-space:nowrap;">+${ach.reward}🪙</button>`
+                : isClaimed ? `<span style="color:#4ade80;font-size:9px;font-weight:900;">✅</span>`
+                : `<span style="color:#64748b;font-size:9px;">${ach.reward}🪙</span>`;
+            row.innerHTML = `<div><div style="font-size:11px;font-weight:900;color:#fbbf24;">${ach.icon} ${ach.name}</div><div style="font-size:9px;color:#94a3b8;">${ach.desc}</div></div><div>${btn}</div>`;
+            catDiv.appendChild(row);
         });
-    }
+        list.appendChild(catDiv);
+    });
+    updateLogrosNotif();
+}
 
-    function renderShop() {
-        const skinsGrid = document.getElementById('cosmetics-grid');
-        skinsGrid.innerHTML = '';
-        for (const [id, skin] of Object.entries(SKINS)) {
-            const isOwned = ownedSkins.includes(id);
-            const isActive = config.activeSkin === id;
-            const card = document.createElement('div');
-            card.className = `cosmetic-card ${isActive ? 'ring-2 ring-yellow-400' : ''}`;
-            card.innerHTML = `<div style="background:${skin.color}; width:24px; height:24px; border-radius:4px;"></div><span class="text-[8px] font-bold">${skin.name}</span><button onclick="handleSkinClick('${id}')" class="text-[8px] px-2 py-1 rounded w-full ${isOwned ? 'bg-blue-600' : 'bg-green-600'}">${isActive ? 'USANDO' : (isOwned ? 'PONER' : skin.price + '🪙')}</button>`;
-            skinsGrid.appendChild(card);
+// ============================
+// ESTADÍSTICAS
+// ============================
+function renderStats() {
+    const c = document.getElementById('stats-content');
+    const bossRatio = totalGames > 0 ? Math.round((totalWins/totalGames)*100) : 0;
+    const mins = Math.floor(totalPlayTime/3600);
+    c.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:8px;padding:4px;">
+        <div style="background:#0f172a;border-radius:10px;padding:12px;border:1px solid #334155;">
+            <div style="font-size:10px;color:#64748b;font-weight:900;margin-bottom:8px;text-transform:uppercase;">⚔️ Combate</div>
+            ${statRow('Kills totales', totalKills, '☠️')}
+            ${statRow('Mejor oleada', bestWave, '🌊')}
+            ${statRow('Mejor Supervivencia', survivalBest + 's', '⏱️')}
+            ${statRow('Jefes derrotados', bossesDefeated, '👹')}
+        </div>
+        <div style="background:#0f172a;border-radius:10px;padding:12px;border:1px solid #334155;">
+            <div style="font-size:10px;color:#64748b;font-weight:900;margin-bottom:8px;text-transform:uppercase;">📊 Partidas</div>
+            ${statRow('Partidas jugadas', totalGames, '🎮')}
+            ${statRow('Niveles superados', totalWins, '🏆')}
+            ${statRow('Tasa de victoria', bossRatio + '%', '📈')}
+            ${statRow('Tiempo jugado', mins + ' min', '⏰')}
+        </div>
+        <div style="background:#0f172a;border-radius:10px;padding:12px;border:1px solid #334155;">
+            <div style="font-size:10px;color:#64748b;font-weight:900;margin-bottom:8px;text-transform:uppercase;">🪙 Economía</div>
+            ${statRow('Monedas actuales', coins, '🪙')}
+            ${statRow('Nivel del jugador', playerLevel, '⬆️')}
+            ${statRow('Racha diaria', dailyStreak + ' días', '📅')}
+        </div>
+        <div style="background:#0f172a;border-radius:10px;padding:12px;border:1px solid #334155;">
+            <div style="font-size:10px;color:#64748b;font-weight:900;margin-bottom:8px;text-transform:uppercase;">🔥 Por Dificultad</div>
+            ${statRow('Kills en Fácil', killsByDifficulty.EASY, '🌿')}
+            ${statRow('Kills en Normal', killsByDifficulty.NORMAL, '⚔️')}
+            ${statRow('Kills en Difícil', killsByDifficulty.HARD, '🔥')}
+            ${statRow('Kills en Pesadilla', killsByDifficulty.NIGHTMARE, '💜')}
+        </div>
+    </div>`;
+}
+function statRow(label, value, icon) {
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #1e293b;"><span style="font-size:11px;color:#94a3b8;">${icon} ${label}</span><span style="font-size:12px;font-weight:900;color:white;">${value}</span></div>`;
+}
+
+// ============================
+// PERSONALIZACIÓN
+// ============================
+function renderCustom() {
+    document.getElementById('player-name-input').value = config.playerName;
+    const shapes = [
+        { id:'SQUARE',   label:'■', title:'Cuadrado' },
+        { id:'CIRCLE',   label:'●', title:'Círculo'  },
+        { id:'TRIANGLE', label:'▲', title:'Triángulo'},
+        { id:'DIAMOND',  label:'◆', title:'Diamante' },
+    ];
+    const ss = document.getElementById('shape-selector');
+    ss.innerHTML = '';
+    shapes.forEach(s => {
+        const btn = document.createElement('button');
+        btn.title = s.title;
+        btn.style.cssText = `width:42px;height:42px;border-radius:8px;font-size:20px;cursor:pointer;border:2px solid ${config.playerShape===s.id?'#f39c12':'#334155'};background:${config.playerShape===s.id?'#1e3a5f':'#1e293b'};color:white;`;
+        btn.innerText = s.label;
+        btn.onclick = () => { config.playerShape = s.id; localStorage.setItem('c_shape', s.id); renderCustom(); };
+        ss.appendChild(btn);
+    });
+    const bullets = [
+        { id:'CIRCLE',  label:'●', title:'Bola'     },
+        { id:'STAR',    label:'★', title:'Estrella'  },
+        { id:'SQUARE',  label:'■', title:'Cuadrado'  },
+        { id:'ARROW',   label:'➤', title:'Flecha'    },
+    ];
+    const bs = document.getElementById('bullet-selector');
+    bs.innerHTML = '';
+    bullets.forEach(b => {
+        const btn = document.createElement('button');
+        btn.title = b.title;
+        btn.style.cssText = `width:42px;height:42px;border-radius:8px;font-size:20px;cursor:pointer;border:2px solid ${config.bulletShape===b.id?'#f39c12':'#334155'};background:${config.bulletShape===b.id?'#1e3a5f':'#1e293b'};color:white;`;
+        btn.innerText = b.label;
+        btn.onclick = () => { config.bulletShape = b.id; localStorage.setItem('c_bullet', b.id); renderCustom(); };
+        bs.appendChild(btn);
+    });
+}
+
+// ============================
+// MOTOR DEL JUEGO
+// ============================
+let gameState = 'MENU', isPaused = false;
+let gameMode  = 'LEVELS', currentNivel = 1, currentMundoView = 1;
+let selectedDifficulty = 'NORMAL', pendingMode = 'LEVELS';
+let player = { y: 200, hp: 125, maxHp: 125, dmg: 1, speed: 5, speedBoost: 0, dmgBoost: 0, shielded: false, bigBullet: false };
+let zombies = [], bananas = [], particles = [], trailParticles = [];
+let recentKills = [], spawnedCount = 0, processedCount = 0;
+let frameCount = 0, infiniteWave = 1, currentPU = null;
+let combo = 0, maxCombo = 0, comboTimer = 0;
+let survivalTimer = 0, levelStartTime = 0, levelDmgTaken = 0;
+let powerUpsAccepted = 0;
+let bossActive = false, boss = null;
+let menuSectionsOpened = new Set();
+let sessionKills = 0;
+
+// Dificultad
+const DIFF = {
+    EASY:      { speedMult: 0.7, hpMult: 0.7, spawnRate: 80,  rewardMult: 1.5, xpMult: 0.7  },
+    NORMAL:    { speedMult: 1.0, hpMult: 1.0, spawnRate: 60,  rewardMult: 1.0, xpMult: 1.0  },
+    HARD:      { speedMult: 1.5, hpMult: 1.5, spawnRate: 45,  rewardMult: 2.0, xpMult: 1.5  },
+    NIGHTMARE: { speedMult: 2.0, hpMult: 2.5, spawnRate: 30,  rewardMult: 3.0, xpMult: 2.5  },
+};
+
+class Zombie {
+    constructor(isInfinite, forcedType) {
+        this.x = canvas.width + 10;
+        this.y = Math.random() * (canvas.height - 80) + 40;
+        const difficulty   = isInfinite ? (infiniteWave * 0.2) : (currentNivel * 0.1);
+        const diff         = DIFF[selectedDifficulty];
+        const rand         = Math.random();
+        let type = forcedType || (rand > 0.92 ? 'TANK' : rand > 0.82 ? 'FAST' : rand > 0.74 ? 'NINJA_Z' : rand > 0.68 ? 'EXPLODE' : rand > 0.62 ? 'GHOST_Z' : 'NORMAL');
+        const zt           = ZOMBIE_TYPES[type];
+        this.type          = type;
+        this.speed         = (zt.speedMult + difficulty * 0.3) * diff.speedMult;
+        this.maxHp         = Math.ceil((1 + difficulty * 0.8) * zt.hpMult * diff.hpMult);
+        this.hp            = this.maxHp;
+        this.size          = zt.size;
+        this.reward        = zt.reward;
+        this.frozen        = false;
+        this.frozenTimer   = 0;
+        this.flashTimer    = 0;
+    }
+    update() {
+        if (this.frozen) { this.frozenTimer--; if (this.frozenTimer <= 0) this.frozen = false; return; }
+        this.x -= this.speed;
+        if (this.flashTimer > 0) this.flashTimer--;
+    }
+    // Hitbox explícita: siempre AABB centrado en el sprite visual
+    getHitbox() {
+        const s = this.size;
+        if (this.type === 'TANK') {
+            // Tank dibuja con offset -4, así que hitbox incluye ese offset
+            return { x: this.x - 4, y: this.y - 4, w: s + 8, h: s + 8 };
+        } else if (this.type === 'GHOST_Z' || this.type === 'EXPLODE') {
+            // Círculo → hitbox cuadrada equivalente al círculo
+            return { x: this.x, y: this.y, w: s, h: s };
+        } else {
+            return { x: this.x, y: this.y, w: s, h: s };
         }
-        const hatsGrid = document.getElementById('hats-grid');
-        hatsGrid.innerHTML = '';
-        for (const [id, hat] of Object.entries(HATS)) {
-            const isOwned = ownedHats.includes(id);
-            const isActive = config.activeHat === id;
-            const card = document.createElement('div');
-            card.className = `cosmetic-card ${isActive ? 'ring-2 ring-yellow-400' : ''}`;
-            card.innerHTML = `<div style="background:${hat.color}; width:24px; height:12px; border-radius:2px; border:1px solid rgba(255,255,255,0.2)"></div><span class="text-[8px] font-bold">${hat.name}</span><button onclick="handleHatClick('${id}')" class="text-[8px] px-2 py-1 rounded w-full ${isOwned ? 'bg-blue-600' : 'bg-green-600'}">${isActive ? 'USANDO' : (isOwned ? 'PONER' : hat.price + '🪙')}</button>`;
-            hatsGrid.appendChild(card);
+    }
+    draw() {
+        const zt = ZOMBIE_TYPES[this.type];
+        let col = zt.color || config.zombieColor;
+        if (this.frozen) col = '#bfdbfe';
+        if (this.flashTimer > 0) col = 'white';
+        ctx.fillStyle = col;
+        const s = this.size;
+        if (this.type === 'TANK') {
+            ctx.fillRect(this.x - 4, this.y - 4, s + 8, s + 8);
+            ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(this.x, this.y, s, 4);
+        } else if (this.type === 'GHOST_Z') {
+            ctx.globalAlpha = 0.6;
+            ctx.beginPath(); ctx.arc(this.x + s/2, this.y + s/2, s/2, 0, Math.PI * 2); ctx.fill();
+            ctx.globalAlpha = 1;
+        } else if (this.type === 'EXPLODE') {
+            ctx.beginPath(); ctx.arc(this.x + s/2, this.y + s/2, s/2, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(this.x + s/2, this.y + s/2, s/2 + 3, 0, Math.PI * 2); ctx.stroke();
+        } else {
+            ctx.fillRect(this.x, this.y, s, s);
+            if (this.type === 'NINJA_Z') { ctx.fillStyle = '#60a5fa'; ctx.fillRect(this.x, this.y + s*0.4, s, 3); }
         }
-        document.getElementById('shop-coins').innerText = `🪙 ${coins}`;
-    }
-
-    function handleSkinClick(id) {
-        if (ownedSkins.includes(id)) { config.activeSkin = id; localStorage.setItem('c_skin', id); } 
-        else if (coins >= SKINS[id].price) { coins -= SKINS[id].price; ownedSkins.push(id); config.activeSkin = id; shopActivity.skin = true; checkShopAchievements(); localStorage.setItem('banana_owned_skins', JSON.stringify(ownedSkins)); saveCoins(); localStorage.setItem('c_skin', id); checkAchievement(5); }
-        renderShop();
-    }
-
-    function handleHatClick(id) {
-        if (ownedHats.includes(id)) { config.activeHat = id; localStorage.setItem('c_hat', id); } 
-        else if (coins >= HATS[id].price) { coins -= HATS[id].price; ownedHats.push(id); config.activeHat = id; shopActivity.hat = true; checkShopAchievements(); localStorage.setItem('banana_owned_hats', JSON.stringify(ownedHats)); saveCoins(); localStorage.setItem('c_hat', id); checkAchievement(5); }
-        renderShop();
-    }
-
-    function checkShopAchievements() {
-        localStorage.setItem('banana_shop_activity', JSON.stringify(shopActivity));
-        if (shopActivity.skin && shopActivity.hat && shopActivity.upgrade) checkAchievement(9);
-    }
-
-    function saveCoins() {
-        localStorage.setItem('banana_coins', coins);
-        if (coins >= 100) checkAchievement(13);
-    }
-
-    // --- MOTOR DEL JUEGO ---
-    let gameState = 'MENU', isPaused = false, gameMode = 'LEVELS', currentNivel = 1, currentMundoView = 1;
-    let player = { y: 200, hp: 125, maxHp: 125, dmg: 1, speed: 5, speedBoost: 0 };
-    let zombies = [], bananas = [], recentKills = [];
-    let spawnedCount = 0, processedCount = 0, frameCount = 0, infiniteWave = 1, currentPU = null;
-
-    class Zombie {
-        constructor(isInfinite) {
-            this.x = canvas.width;
-            this.y = Math.random() * (canvas.height - 60) + 30;
-            const difficulty = isInfinite ? (infiniteWave * 0.2) : (currentNivel * 0.1);
-            this.type = Math.random() > 0.85 ? 'FAST' : 'NORMAL';
-            this.speed = (this.type === 'FAST' ? 2.5 : 1) + difficulty;
-            this.hp = 1 + Math.floor(difficulty / 3);
-        }
-        update() { this.x -= this.speed; }
-        draw() {
-            ctx.fillStyle = this.type === 'FAST' ? '#ff4d4d' : config.zombieColor;
-            ctx.fillRect(this.x, this.y, 20, 20);
+        // HP bar
+        if (this.maxHp > 1) {
+            const hb = this.getHitbox();
+            const bw = hb.w; const bx = hb.x; const by = hb.y - 6;
+            ctx.fillStyle = '#1e293b'; ctx.fillRect(bx, by, bw, 3);
+            ctx.fillStyle = this.hp/this.maxHp > 0.5 ? '#4ade80' : '#f97316';
+            ctx.fillRect(bx, by, bw * (this.hp/this.maxHp), 3);
         }
     }
+}
 
-    function triggerPowerUp() {
-        isPaused = true;
-        frameCount++; 
-        currentPU = PU_TYPES[Math.floor(Math.random() * PU_TYPES.length)];
-        document.getElementById('pu-name').innerText = currentPU.name;
-        document.getElementById('pu-desc').innerText = currentPU.desc;
-        document.getElementById('pu-icon').innerText = currentPU.icon;
-        document.getElementById('pu-icon').style.backgroundColor = currentPU.color;
-        document.getElementById('powerup-modal').style.display = 'flex';
+// BOSS
+class Boss {
+    constructor() {
+        this.x = canvas.width;
+        this.y = canvas.height / 2 - 40;
+        this.maxHp = 50 + currentNivel * 10;
+        this.hp = this.maxHp;
+        this.speed = 0.8;
+        this.size = 60;
+        this.phase = 1;
+        this.attackTimer = 0;
+        this.minions = [];
+        this.flashTimer = 0;
+        this.angle = 0;
     }
-
-    function acceptPowerUp() {
-        if (currentPU.id === 'HEAL') player.hp = Math.min(player.maxHp, player.hp + 40);
-        if (currentPU.id === 'SPEED') {
-            player.speedBoost = 3;
-            checkAchievement(17);
-            setTimeout(() => player.speedBoost = 0, 5000);
+    update() {
+        this.x -= this.speed;
+        this.angle += 0.05;
+        this.attackTimer++;
+        if (this.flashTimer > 0) this.flashTimer--;
+        // Fase 2 al 50% hp
+        if (this.hp < this.maxHp * 0.5 && this.phase === 1) {
+            this.phase = 2; this.speed = 1.3; showToast('👹 ¡FASE 2!', '#ef4444');
         }
-        if (currentPU.id === 'GOLD') { coins += 100; saveCoins(); }
-        checkAchievement(8);
-        closePowerUp();
-    }
-
-    function declinePowerUp() { closePowerUp(); }
-
-    function closePowerUp() {
-        document.getElementById('powerup-modal').style.display = 'none';
-        isPaused = false;
-        requestAnimationFrame(gameLoop);
-    }
-
-    function update() {
-        const actualSpeed = player.speed + player.speedBoost;
-        if (keys.w || keys.ArrowUp) player.y = Math.max(0, player.y - actualSpeed);
-        if (keys.s || keys.ArrowDown) player.y = Math.min(canvas.height - 30, player.y + actualSpeed);
-
-        const limit = gameMode === 'LEVELS' ? (10 + currentNivel * 2) : Infinity;
-        if (gameMode === 'INFINITE' && frameCount % 600 === 0) {
-            infiniteWave++;
-            if (infiniteWave === 20) checkAchievement(12);
+        // Spawnear esbirros
+        if (this.attackTimer % 200 === 0) {
+            zombies.push(new Zombie(false, 'FAST'));
+            zombies.push(new Zombie(false, 'FAST'));
         }
+        if (this.x < 80) { player.hp -= 5; if (player.hp <= 0) gameOver(); this.x = 85; }
+    }
+    draw() {
+        ctx.save();
+        ctx.translate(this.x + this.size/2, this.y + this.size/2);
+        ctx.rotate(this.angle * 0.1);
+        // Aura
+        ctx.beginPath();
+        const grad = ctx.createRadialGradient(0, 0, 20, 0, 0, 45);
+        grad.addColorStop(0, 'rgba(139,92,246,0.3)');
+        grad.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad;
+        ctx.arc(0, 0, 45, 0, Math.PI * 2); ctx.fill();
+        // Cuerpo
+        ctx.fillStyle = this.flashTimer > 0 ? 'white' : (this.phase === 2 ? '#dc2626' : '#7c3aed');
+        ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+        // Ojos
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(-14, -10, 10, 10);
+        ctx.fillRect(4, -10, 10, 10);
+        // Boca
+        ctx.fillStyle = '#1a1a2e';
+        ctx.fillRect(-12, 5, 24, 6);
+        ctx.restore();
+        // HP bar
+        const bw = 80; const bx = this.x - 10; const by = this.y - 14;
+        ctx.fillStyle = '#1e293b'; ctx.fillRect(bx, by, bw, 6);
+        const pct = this.hp / this.maxHp;
+        ctx.fillStyle = pct > 0.5 ? '#4ade80' : pct > 0.25 ? '#f97316' : '#ef4444';
+        ctx.fillRect(bx, by, bw * pct, 6);
+        ctx.fillStyle = 'white'; ctx.font = '8px Inter'; ctx.textAlign = 'center';
+        ctx.fillText('👹 JEFE', this.x + this.size/2, by - 3);
+    }
+}
 
-        if (spawnedCount < limit && frameCount % 60 === 0) {
-            zombies.push(new Zombie(gameMode === 'INFINITE'));
+// ============================
+// PARTÍCULAS
+// ============================
+function spawnParticles(x, y, color, count) {
+    for (let i = 0; i < count; i++) {
+        particles.push({ x, y, vx: (Math.random()-0.5)*4, vy: (Math.random()-0.5)*4, life: 1, color });
+    }
+}
+function updateParticles() {
+    particles = particles.filter(p => p.life > 0);
+    particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.life -= 0.04; p.vy += 0.1; });
+}
+function drawParticles() {
+    particles.forEach(p => {
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
+    });
+    ctx.globalAlpha = 1;
+}
+function spawnTrailParticle(b) {
+    if (config.activeTrail === 'NONE') return;
+    const t = TRAILS[config.activeTrail];
+    let col = t.color === 'rainbow' ? `hsl(${(frameCount*6)%360},100%,60%)` : t.color;
+    trailParticles.push({ x: b.x, y: b.y, life: 1, color: col, size: Math.random()*4+2 });
+}
+function drawTrailParticles() {
+    trailParticles = trailParticles.filter(p => p.life > 0);
+    trailParticles.forEach(p => {
+        ctx.globalAlpha = p.life * 0.7;
+        ctx.fillStyle = p.color;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2); ctx.fill();
+        p.life -= 0.08;
+    });
+    ctx.globalAlpha = 1;
+}
+
+// ============================
+// DIBUJO JUGADOR
+// ============================
+function drawPlayer() {
+    const skin = SKINS[config.activeSkin];
+    const col  = player.shielded ? '#6366f1' : skin.color;
+    ctx.fillStyle = col;
+    const px = 55, py = player.y;
+    const shape = config.playerShape;
+    if (config.activeSkin === 'ALIEN') {
+        ctx.beginPath(); ctx.ellipse(px + 15, py + 15, 13, 19, 0, 0, Math.PI*2); ctx.fill();
+    } else if (shape === 'CIRCLE') {
+        ctx.beginPath(); ctx.arc(px + 15, py + 15, 15, 0, Math.PI * 2); ctx.fill();
+    } else if (shape === 'TRIANGLE') {
+        ctx.beginPath(); ctx.moveTo(px + 15, py); ctx.lineTo(px + 30, py + 30); ctx.lineTo(px, py + 30); ctx.closePath(); ctx.fill();
+    } else if (shape === 'DIAMOND') {
+        ctx.beginPath(); ctx.moveTo(px + 15, py); ctx.lineTo(px + 30, py + 15); ctx.lineTo(px + 15, py + 30); ctx.lineTo(px, py + 15); ctx.closePath(); ctx.fill();
+    } else {
+        ctx.fillRect(px, py, 30, 30);
+        if (config.activeSkin === 'KNIGHT') { ctx.fillStyle = '#7f8c8d'; ctx.fillRect(px, py, 30, 8); }
+        if (config.activeSkin === 'NINJA')  { ctx.fillStyle = '#ef4444'; ctx.fillRect(px, py + 10, 30, 4); }
+        if (config.activeSkin === 'ROBOT')  { ctx.fillStyle = '#1e293b'; ctx.fillRect(px+8, py+4, 6, 6); ctx.fillRect(px+16, py+4, 6, 6); }
+        if (config.activeSkin === 'DEMON')  { ctx.fillStyle = '#7f1d1d'; ctx.fillRect(px+6, py-6, 5, 8); ctx.fillRect(px+18, py-6, 5, 8); }
+    }
+    if (player.shielded) {
+        ctx.strokeStyle = '#818cf8'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(px + 15, py + 15, 20, 0, Math.PI * 2); ctx.stroke();
+    }
+    drawHat(px, py);
+    // Nombre del jugador
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.font = 'bold 8px Inter'; ctx.textAlign = 'center';
+    ctx.fillText(config.playerName, px + 15, py - 5);
+    ctx.textAlign = 'left';
+}
+function drawHat(px, py) {
+    if (config.activeHat === 'NONE') return;
+    const hat = HATS[config.activeHat];
+    ctx.fillStyle = hat.color;
+    if (config.activeHat === 'CAP')    { ctx.fillRect(px, py-7, 30, 9); ctx.fillRect(px+22, py-4, 12, 4); }
+    else if (config.activeHat === 'CROWN') {
+        ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px,py-12); ctx.lineTo(px+8,py-6);
+        ctx.lineTo(px+15,py-12); ctx.lineTo(px+22,py-6); ctx.lineTo(px+30,py-12);
+        ctx.lineTo(px+30,py); ctx.closePath(); ctx.fill();
+    }
+    else if (config.activeHat === 'VIKING') {
+        ctx.fillRect(px, py-7, 30, 10);
+        ctx.fillStyle='#e5e7eb';
+        ctx.beginPath(); ctx.moveTo(px,py-3); ctx.lineTo(px-12,py-16); ctx.lineTo(px,py-9); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(px+30,py-3); ctx.lineTo(px+42,py-16); ctx.lineTo(px+30,py-9); ctx.fill();
+    }
+    else if (config.activeHat === 'HALO')  { ctx.strokeStyle='#67e8f9'; ctx.lineWidth=3; ctx.beginPath(); ctx.ellipse(px+15,py-12,16,5,0,0,Math.PI*2); ctx.stroke(); }
+    else if (config.activeHat === 'WITCH') {
+        ctx.beginPath(); ctx.moveTo(px+15,py-24); ctx.lineTo(px+28,py-2); ctx.lineTo(px+2,py-2); ctx.closePath(); ctx.fill();
+        ctx.fillRect(px-2, py-5, 34, 5);
+    }
+    else if (config.activeHat === 'PARTY') {
+        ctx.beginPath(); ctx.moveTo(px+15,py-22); ctx.lineTo(px+22,py-2); ctx.lineTo(px+8,py-2); ctx.closePath(); ctx.fill();
+        ctx.fillStyle='#fbbf24'; ctx.beginPath(); ctx.arc(px+15,py-22,3,0,Math.PI*2); ctx.fill();
+    }
+    else if (config.activeHat === 'COWBOY') {
+        ctx.fillRect(px+4,py-10,22,10);
+        ctx.fillRect(px-2,py-4,34,5);
+    }
+}
+function drawBullet(b) {
+    const col = player.dmgBoost > 0 ? '#ef4444' : '#fbbf24';
+    ctx.fillStyle = col;
+    const r = player.bigBullet ? 8 : 5;
+    if (config.bulletShape === 'STAR') {
+        drawStar(ctx, b.x, b.y, 5, r, r/2);
+    } else if (config.bulletShape === 'SQUARE') {
+        ctx.fillRect(b.x - r, b.y - r, r*2, r*2);
+    } else if (config.bulletShape === 'ARROW') {
+        ctx.beginPath(); ctx.moveTo(b.x+r, b.y); ctx.lineTo(b.x-r, b.y-r/2); ctx.lineTo(b.x-r, b.y+r/2); ctx.closePath(); ctx.fill();
+    } else {
+        ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, Math.PI*2); ctx.fill();
+    }
+}
+function drawStar(ctx, cx, cy, spikes, outerR, innerR) {
+    let rot = (Math.PI/2)*3, step = Math.PI/spikes;
+    ctx.beginPath(); ctx.moveTo(cx, cy - outerR);
+    for (let i = 0; i < spikes; i++) {
+        ctx.lineTo(cx + Math.cos(rot)*outerR, cy + Math.sin(rot)*outerR); rot += step;
+        ctx.lineTo(cx + Math.cos(rot)*innerR, cy + Math.sin(rot)*innerR); rot += step;
+    }
+    ctx.lineTo(cx, cy - outerR); ctx.closePath(); ctx.fill();
+}
+
+// ============================
+// POWERUPS
+// ============================
+function triggerPowerUp() {
+    isPaused = true; frameCount++;
+    currentPU = PU_TYPES[Math.floor(Math.random() * PU_TYPES.length)];
+    document.getElementById('pu-name').innerText = currentPU.name;
+    document.getElementById('pu-desc').innerText = currentPU.desc;
+    document.getElementById('pu-icon').innerText = currentPU.icon;
+    document.getElementById('pu-icon').style.background = currentPU.color;
+    document.getElementById('powerup-modal').style.display = 'flex';
+}
+function acceptPowerUp() {
+    const diff = DIFF[selectedDifficulty];
+    if (currentPU.id === 'HEAL')   player.hp = Math.min(player.maxHp, player.hp + 50);
+    if (currentPU.id === 'SPEED')  { player.speedBoost = 4; checkAchievement(17); setTimeout(()=>player.speedBoost=0,6000); }
+    if (currentPU.id === 'GOLD')   { coins += Math.round(150 * diff.rewardMult); saveCoins(); }
+    if (currentPU.id === 'DAMAGE') { player.dmgBoost = 3; setTimeout(()=>player.dmgBoost=0,8000); }
+    if (currentPU.id === 'SHIELD') { player.shielded = true; setTimeout(()=>player.shielded=false,5000); }
+    if (currentPU.id === 'FREEZE') { zombies.forEach(z=>{ z.frozen=true; z.frozenTimer=180; }); }
+    checkAchievement(8);
+    powerUpsAccepted++;
+    if (powerUpsAccepted >= 10) checkAchievement(30);
+    closePowerUp();
+}
+function declinePowerUp() { closePowerUp(); }
+function closePowerUp() { document.getElementById('powerup-modal').style.display='none'; isPaused=false; requestAnimationFrame(gameLoop); }
+
+// ============================
+// COMBO
+// ============================
+function addCombo() {
+    combo++;
+    comboTimer = 120;
+    if (combo > maxCombo) maxCombo = combo;
+    if (combo >= 10) checkAchievement(21);
+    if (combo >= 20) checkAchievement(22);
+    updateComboDisplay();
+}
+function updateComboDisplay() {
+    const el = document.getElementById('combo-display');
+    if (combo >= 3) {
+        el.innerText = `x${combo} COMBO!`;
+        el.style.fontSize = Math.min(8 + combo, 20) + 'px';
+        el.style.color = combo >= 10 ? '#f87171' : combo >= 5 ? '#fb923c' : '#fbbf24';
+    } else {
+        el.innerText = '';
+    }
+}
+
+// ============================
+// FLOAT TEXT
+// ============================
+function spawnFloatText(x, y, text, color) {
+    const el = document.createElement('div');
+    el.className = 'float-text';
+    el.style.left = (x / canvas.width * 600) + 50 + 'px';
+    el.style.top  = (y / canvas.height * 400) + 'px';
+    el.style.color = color || '#fbbf24';
+    el.innerText = text;
+    document.getElementById('game-container').appendChild(el);
+    setTimeout(() => el.remove(), 1000);
+}
+
+// ============================
+// LÓGICA DE JUEGO
+// ============================
+function update() {
+    const diff = DIFF[selectedDifficulty];
+    const actualSpeed = player.speed + player.speedBoost;
+    if (keys['w'] || keys['ArrowUp'])    player.y = Math.max(0, player.y - actualSpeed);
+    if (keys['s'] || keys['ArrowDown'])  player.y = Math.min(canvas.height - 35, player.y + actualSpeed);
+
+    // Combo timer
+    if (comboTimer > 0) { comboTimer--; if (comboTimer === 0) { combo = 0; updateComboDisplay(); } }
+
+    // Tiempo supervivencia
+    if (gameMode === 'SURVIVAL') {
+        survivalTimer++;
+        if (survivalTimer >= 7200 && !unlockedAchievements.includes(24)) checkAchievement(24);
+        if (survivalTimer > survivalBest) { survivalBest = survivalTimer; localStorage.setItem('bs_survival_best', survivalBest); }
+    }
+
+    // Estadísticas de tiempo
+    totalPlayTime++;
+    if (totalPlayTime % 60 === 0) localStorage.setItem('bs_play_time', totalPlayTime);
+
+    const limit = gameMode === 'LEVELS' ? (10 + currentNivel * 2) : Infinity;
+
+    // TUTORIAL: límite fijo de 12 zombies, sin powerups, spawn lento
+    const tutorialLimit = 12;
+
+    // Oleadas infinitas
+    if (gameMode === 'INFINITE' && frameCount % 600 === 0 && frameCount > 0) {
+        infiniteWave++;
+        if (infiniteWave > bestWave) { bestWave = infiniteWave; localStorage.setItem('bs_best_wave', bestWave); }
+        if (infiniteWave >= 20) checkAchievement(12);
+        showToast(`🌊 Oleada ${infiniteWave}`, '#38bdf8');
+    }
+
+    // Spawn
+    const spawnInterval = Math.max(20, diff.spawnRate - Math.floor(frameCount/600)*3);
+    if (spawnedCount < limit && frameCount % spawnInterval === 0) {
+        zombies.push(new Zombie(gameMode === 'INFINITE'));
+        spawnedCount++;
+    }
+
+    // Modo supervivencia: spawn continuo con escalado
+    if (gameMode === 'SURVIVAL' && frameCount % Math.max(15, 45 - Math.floor(survivalTimer/300)) === 0) {
+        zombies.push(new Zombie(true));
+    }
+
+    // PowerUps (no en tutorial)
+    if (frameCount > 0 && gameMode !== 'BOSS' && gameMode !== 'TUTORIAL' && frameCount % 900 === 0) { triggerPowerUp(); return; }
+
+    // Tutorial: spawn lento, solo NORMAL y FAST, sin tanques ni especiales
+    if (gameMode === 'TUTORIAL') {
+        if (spawnedCount < tutorialLimit && frameCount % 100 === 0) {
+            const type = spawnedCount >= 8 ? 'FAST' : 'NORMAL';
+            zombies.push(new Zombie(false, type));
             spawnedCount++;
         }
+        updateTutorialHints();
+        if (processedCount >= tutorialLimit) { completeTutorial(); return; }
+    }
 
-        if (frameCount > 0 && frameCount % 1000 === 0) {
-            triggerPowerUp();
-            return; 
+    // Boss mode
+    if (gameMode === 'BOSS') {
+        if (!boss && frameCount === 120) {
+            boss = new Boss();
+            showToast('👹 ¡JEFE APARECE!', '#7c3aed');
         }
-
-        bananas.forEach((b, bi) => {
-            b.x += 8;
-            zombies.forEach((z, zi) => {
-                if (b.x > z.x && b.x < z.x + 20 && b.y > z.y && b.y < z.y + 20) {
-                    z.hp -= player.dmg; bananas.splice(bi, 1);
-                    if (z.hp <= 0) {
-                        totalKills++; processedCount++;
-                        localStorage.setItem('banana_total_kills', totalKills);
-                        checkAchievement(1);
-                        if (totalKills >= 20) checkAchievement(2);
-                        if (totalKills >= 50) checkAchievement(11);
-                        if (z.type === 'FAST') checkAchievement(4);
-                        const now = Date.now();
-                        recentKills.push(now);
-                        recentKills = recentKills.filter(t => now - t < (gameMode === 'INFINITE' ? 3000 : 2000));
-                        if (recentKills.length >= 3) checkAchievement(3);
-                        if (gameMode === 'INFINITE' && recentKills.length >= 10) checkAchievement(18);
-                        zombies.splice(zi, 1);
-                        coins += 5; saveCoins();
-                    }
+        if (boss) {
+            boss.update();
+            // Colisión balas-boss
+            bananas.forEach((b, bi) => {
+                if (!boss) return;
+                const bx = boss.x, by = boss.y, bs = boss.size;
+                if (b.x > bx && b.x < bx+bs && b.y > by && b.y < by+bs) {
+                    const dmg = player.dmg + player.dmgBoost;
+                    boss.hp -= dmg; boss.flashTimer = 4; bananas.splice(bi,1);
+                    spawnParticles(b.x, b.y, '#8b5cf6', 3);
+                    if (boss.hp <= 0) { bossDefeated(); return; }
                 }
             });
-        });
+        }
+    }
 
+    // Balas
+    const bulletSpeed = 9;
+    bananas.forEach((b, bi) => {
+        b.x += bulletSpeed;
+        spawnTrailParticle(b);
+        if (b.x > canvas.width) { bananas.splice(bi, 1); return; }
         zombies.forEach((z, zi) => {
-            z.update();
-            if (z.x < 50) {
-                player.hp -= 20;
-                zombies.splice(zi, 1);
-                processedCount++;
-                if (player.hp <= 0) gameOver();
+            const hb = z.getHitbox();
+            // Pequeño margen de tolerancia (+2px) para que se sienta justo
+            const margin = 2;
+            if (b.x > hb.x - margin && b.x < hb.x + hb.w + margin &&
+                b.y > hb.y - margin && b.y < hb.y + hb.h + margin) {
+                const dmg = player.dmg + player.dmgBoost;
+                z.hp -= dmg; z.flashTimer = 3;
+                bananas.splice(bi, 1);
+                spawnFloatText(z.x, z.y, `-${dmg}`, '#ef4444');
+                if (z.hp <= 0) killZombie(z, zi, diff);
             }
         });
+    });
 
-        if (gameMode === 'LEVELS' && processedCount >= limit) winLevel();
-        frameCount++;
-        updateHUD();
+    // Zombies alcanzan base
+    zombies.forEach((z, zi) => {
+        z.update();
+        const hb = z.getHitbox();
+        if (hb.x < 50) {
+            if (!player.shielded) {
+                const dmg = z.type === 'TANK' ? 30 : z.type === 'EXPLODE' ? 35 : 20;
+                player.hp -= dmg; levelDmgTaken += dmg;
+                spawnParticles(50, hb.y + hb.h/2, '#ef4444', 4);
+            }
+            zombies.splice(zi, 1); processedCount++;
+            if (player.hp <= 0) { gameOver(); return; }
+        }
+    });
+
+    updateParticles();
+
+    if (gameMode === 'LEVELS' && processedCount >= limit) winLevel();
+    frameCount++;
+    updateHUD();
+}
+
+function killZombie(z, zi, diff) {
+    totalKills++; sessionKills++; processedCount++;
+    localStorage.setItem('bs_total_kills', totalKills);
+    killsByDifficulty[selectedDifficulty]++;
+    localStorage.setItem('bs_kills_diff', JSON.stringify(killsByDifficulty));
+
+    // Recompensa monedas
+    const reward = Math.round(z.reward * diff.rewardMult * (1 + combo * 0.05));
+    coins += reward; saveCoins();
+    addXP(Math.round(5 * diff.xpMult));
+    spawnParticles(z.x + z.size/2, z.y + z.size/2, ZOMBIE_TYPES[z.type].color || config.zombieColor, 5);
+    if (combo >= 3) spawnFloatText(z.x, z.y, `+${reward}🪙`, '#fbbf24');
+
+    addCombo();
+    zombies.splice(zi, 1);
+
+    // Logros kills
+    checkAchievement(1);
+    if (totalKills >= 20)  checkAchievement(2);
+    if (totalKills >= 50)  checkAchievement(11);
+    if (totalKills >= 200) checkAchievement(19);
+    if (totalKills >= 500) checkAchievement(20);
+    if (z.type === 'FAST') checkAchievement(4);
+
+    // Logros dificultad
+    if (['HARD','NIGHTMARE'].includes(selectedDifficulty)) {
+        const hardKills = killsByDifficulty.HARD + killsByDifficulty.NIGHTMARE;
+        if (hardKills >= 50) checkAchievement(28);
     }
 
-    function draw() {
-        const mIdx = Math.min(2, Math.floor((currentNivel - 1) / 15));
-        const bgs = ['#1e293b', '#451a03', '#450a0a'];
-        ctx.fillStyle = bgs[mIdx]; ctx.fillRect(0,0,600,400);
-        ctx.fillStyle = config.baseColor; ctx.fillRect(0,0,50,400);
-        
-        const sColor = SKINS[config.activeSkin].color;
-        ctx.fillStyle = sColor;
-        if (config.activeSkin === 'ALIEN') {
-            ctx.beginPath(); ctx.ellipse(70, player.y + 15, 12, 18, 0, 0, Math.PI*2); ctx.fill();
+    // Racha
+    const now = Date.now(); recentKills.push(now);
+    recentKills = recentKills.filter(t => now - t < (gameMode==='INFINITE'?3000:2000));
+    if (recentKills.length >= 3) checkAchievement(3);
+    if (gameMode === 'INFINITE' && recentKills.length >= 10) checkAchievement(18);
+}
+
+function bossDefeated() {
+    bossesDefeated++; localStorage.setItem('bs_bosses', bossesDefeated);
+    const diff = DIFF[selectedDifficulty];
+    const reward = Math.round(500 * diff.rewardMult);
+    coins += reward; saveCoins(); addXP(200);
+    checkAchievement(25);
+    if (bossesDefeated >= 5) checkAchievement(26);
+    gameState = 'BOSS_WIN';
+    const statsEl = document.getElementById('boss-result-stats');
+    statsEl.innerHTML = `
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:#64748b;">Recompensa</span><span style="font-weight:900;color:#fbbf24;">+${reward} 🪙</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:#64748b;">XP ganada</span><span style="font-weight:900;color:#a5b4fc;">+200 XP</span></div>
+        <div style="display:flex;justify-content:space-between;"><span style="color:#64748b;">Jefes totales</span><span style="font-weight:900;color:white;">${bossesDefeated}</span></div>`;
+    document.getElementById('boss-result-title').innerText = '¡JEFE DERROTADO!';
+    document.getElementById('boss-result-icon').innerText = '🏆';
+    document.getElementById('boss-screen').style.display = 'flex';
+    boss = null;
+}
+
+// ============================
+// DIBUJO
+// ============================
+function draw() {
+    // Reaplicar escala en cada frame — garantiza nitidez tras resize y en HiDPI
+    ctx.setTransform(currentCssScale * dpr, 0, 0, currentCssScale * dpr, 0, 0);
+
+    const worldIdx = gameMode === 'TUTORIAL' ? 0 : Math.min(2, Math.max(0, Math.floor((currentNivel - 1) / 15)));
+    const wd = WORLD_DATA[worldIdx];
+    // Fondo con gradiente
+    const bg = ctx.createLinearGradient(0,0,0,400);
+    bg.addColorStop(0, wd.bg[0]); bg.addColorStop(1, wd.bg[1]);
+    ctx.fillStyle = bg; ctx.fillRect(0,0,600,400);
+
+    // Estrellas fondo
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    for (let i = 0; i < 30; i++) {
+        const sx = ((i*97+frameCount*0.2)%600); const sy = ((i*53)%400);
+        ctx.fillRect(sx,sy,1,1);
+    }
+
+    // Grid suelo
+    ctx.strokeStyle = 'rgba(255,255,255,0.03)'; ctx.lineWidth = 1;
+    for (let y = 0; y < 400; y += 40) { ctx.beginPath(); ctx.moveTo(50,y); ctx.lineTo(600,y); ctx.stroke(); }
+
+    // Base
+    const baseGrad = ctx.createLinearGradient(0,0,50,0);
+    baseGrad.addColorStop(0, config.baseColor); baseGrad.addColorStop(1, config.baseColor+'99');
+    ctx.fillStyle = baseGrad; ctx.fillRect(0,0,50,400);
+    // Detalle base
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(50,0); ctx.lineTo(50,400); ctx.stroke();
+    // Muescas defensivas
+    for (let i = 0; i < 4; i++) {
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.fillRect(30, 20 + i*90, 20, 60);
+    }
+
+    drawTrailParticles();
+    bananas.forEach(b => drawBullet(b));
+    zombies.forEach(z => z.draw());
+    if (boss) boss.draw();
+    drawParticles();
+    drawPlayer();
+
+    // HUD daño shield
+    if (player.shielded) {
+        ctx.strokeStyle = 'rgba(99,102,241,0.3)'; ctx.lineWidth = 6;
+        ctx.strokeRect(0,0,600,400);
+    }
+    // HUD modo supervivencia
+    if (gameMode === 'SURVIVAL') {
+        const secs = Math.floor(survivalTimer/60);
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx.fillRect(220, 10, 160, 28);
+        ctx.fillStyle = '#fbbf24'; ctx.font = 'bold 14px Inter'; ctx.textAlign = 'center';
+        ctx.fillText(`⏱ ${secs}s`, 300, 29);
+        ctx.textAlign = 'left';
+    }
+    // HUD Boss HP
+    if (gameMode === 'BOSS' && boss) {
+        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        ctx.fillRect(150, 8, 300, 22);
+        ctx.fillStyle = '#7c3aed';
+        ctx.fillRect(152, 10, 296 * (boss.hp/boss.maxHp), 18);
+        ctx.fillStyle = 'white'; ctx.font = 'bold 10px Inter'; ctx.textAlign = 'center';
+        ctx.fillText(`👹 ${boss.hp} / ${boss.maxHp}`, 300, 23);
+        ctx.textAlign = 'left';
+    }
+}
+
+// ============================
+// HUD
+// ============================
+function updateHUD() {
+    document.getElementById('health-bar').style.width = Math.max(0,player.hp/player.maxHp*100) + '%';
+    const worldIdx = Math.min(2, Math.max(0, Math.floor((currentNivel-1)/15)))+1;
+    const lvlInWorld = Math.max(1, ((currentNivel-1)%15)+1);
+    const diffColors = { EASY:'#4ade80', NORMAL:'#fbbf24', HARD:'#f97316', NIGHTMARE:'#a78bfa' };
+    const diffEmoji  = { EASY:'🌿', NORMAL:'⚔️', HARD:'🔥', NIGHTMARE:'💜' };
+
+    let leftText = '';
+    if (gameMode==='LEVELS')   leftText = `M${worldIdx}-N${lvlInWorld} | 🪙${coins}`;
+    else if (gameMode==='INFINITE') leftText = `♾️ Oleada ${infiniteWave} | 🪙${coins}`;
+    else if (gameMode==='SURVIVAL') leftText = `🛡️ ${Math.floor(survivalTimer/60)}s | 🪙${coins}`;
+    else if (gameMode==='BOSS')    leftText = `👹 Jefe | 🪙${coins}`;
+    else if (gameMode==='TUTORIAL') leftText = `🎓 Tutorial | ☠️ ${sessionKills}/12`;
+
+    document.getElementById('hud-left').innerText = leftText;
+    document.getElementById('hud-mode').innerHTML = `<span style="color:${diffColors[selectedDifficulty]}">${diffEmoji[selectedDifficulty]} ${selectedDifficulty}</span>`;
+
+    let rightText = '';
+    if (gameMode==='LEVELS')    { const lim=10+currentNivel*2; rightText=`☠️ ${processedCount}/${lim}`; }
+    else if (gameMode==='INFINITE') rightText = `☠️ ${totalKills}`;
+    else if (gameMode==='SURVIVAL') rightText = `☠️ ${sessionKills}`;
+    else if (gameMode==='BOSS')     rightText = boss ? `👹 ${boss.hp}HP` : '¡Preparado!';
+    else if (gameMode==='TUTORIAL') rightText = `Quedan: ${Math.max(0, 12 - processedCount)}`;
+    document.getElementById('hud-right').innerText = rightText;
+
+    // Streak / combo en el canvas-overlay
+    const streakEl = document.getElementById('streak-display');
+    if (combo >= 3) {
+        streakEl.innerText = '';
+    } else {
+        streakEl.innerText = '';
+    }
+    document.getElementById('modeInfiniteBtn').classList.toggle('button-disabled', unlockedLevel < 16);
+    document.getElementById('modeBossBtn').classList.toggle('button-disabled', bossesDefeated === 0 && unlockedLevel < 6);
+    updateXPBar();
+}
+
+// ============================
+// FLUJO DEL JUEGO
+// ============================
+function goToMenu() {
+    gameState = 'MENU'; isPaused = false;
+    boss = null; bossActive = false;
+    hideTutorialHint();
+    document.querySelectorAll('.modal-screen').forEach(s => s.style.display='none');
+    document.getElementById('main-menu-screen').style.display='flex';
+    document.getElementById('pause-trigger').style.display='none';
+    applyTutorialLock();
+    updateLogrosNotif(); checkDailyReward(); updateXPBar();
+}
+function exitToMenu() { goToMenu(); }
+
+// Controla qué botones están activos según si el tutorial está completado
+function applyTutorialLock() {
+    const locked = !tutorialDone;
+
+    // Botones del menú principal: bloqueados hasta tutorial
+    const lockBtns = ['modeLevelsBtn','modeInfiniteBtn','modeSurvivalBtn','modeBossBtn',
+                       'openShopMenuBtn','openAchievementsBtn','openCustomBtn','openStatsBtn'];
+    lockBtns.forEach(id => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        if (locked) {
+            btn.classList.add('button-disabled');
+            btn.style.pointerEvents = 'none';
         } else {
-            ctx.fillRect(55, player.y, 30, 30);
-            if (config.activeSkin === 'KNIGHT') { ctx.fillStyle = "#7f8c8d"; ctx.fillRect(55, player.y, 30, 8); }
-            if (config.activeSkin === 'NINJA') { ctx.fillStyle = "red"; ctx.fillRect(55, player.y + 10, 30, 4); }
+            btn.classList.remove('button-disabled');
+            btn.style.pointerEvents = '';
         }
+    });
 
-        if (config.activeHat !== 'NONE') {
-            ctx.fillStyle = HATS[config.activeHat].color;
-            if (config.activeHat === 'CAP') { ctx.fillRect(50, player.y - 5, 30, 8); ctx.fillRect(75, player.y - 2, 10, 3); }
-            else if (config.activeHat === 'CROWN') { ctx.beginPath(); ctx.moveTo(55, player.y); ctx.lineTo(55, player.y-10); ctx.lineTo(62, player.y-5); ctx.lineTo(70, player.y-10); ctx.lineTo(77, player.y-5); ctx.lineTo(85, player.y-10); ctx.lineTo(85, player.y); ctx.closePath(); ctx.fill(); }
-            else if (config.activeHat === 'VIKING') { ctx.fillRect(55, player.y-5, 30, 10); ctx.fillStyle="white"; ctx.beginPath(); ctx.moveTo(55,player.y-5); ctx.lineTo(45,player.y-15); ctx.lineTo(55,player.y-10); ctx.fill(); ctx.beginPath(); ctx.moveTo(85,player.y-5); ctx.lineTo(95,player.y-15); ctx.lineTo(85,player.y-10); ctx.fill(); }
-            else if (config.activeHat === 'HALO') { ctx.strokeStyle = "#81ecec"; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(70, player.y-10, 15, 5, 0, 0, Math.PI*2); ctx.stroke(); }
-        }
-        
-        zombies.forEach(z => z.draw());
-        ctx.fillStyle = "#fbbf24"; bananas.forEach(b => { ctx.beginPath(); ctx.arc(b.x, b.y, 5, 0, 7); ctx.fill(); });
-    }
-
-    function updateHUD() {
-        document.getElementById('health-bar').style.width = (player.hp/player.maxHp*100) + "%";
-        const m = Math.floor((currentNivel-1)/15)+1; const n = ((currentNivel-1)%15)+1;
-        document.getElementById('hud-left').innerText = gameMode === 'LEVELS' ? `M${m}-N${n} | 🪙 ${coins}` : `INF W${infiniteWave} | 🪙 ${coins}`;
-        const limit = 10 + currentNivel * 2;
-        document.getElementById('hud-right').innerText = gameMode === 'LEVELS' ? `ZOMBIS: ${processedCount}/${limit}` : `KILLS: ${totalKills}`;
+    // Bloqueos normales post-tutorial
+    if (!locked) {
         document.getElementById('modeInfiniteBtn').classList.toggle('button-disabled', unlockedLevel < 16);
+        document.getElementById('modeInfiniteBtn').style.pointerEvents = unlockedLevel < 16 ? 'none' : '';
+        document.getElementById('modeBossBtn').classList.toggle('button-disabled', bossesDefeated === 0 && unlockedLevel < 6);
+        document.getElementById('modeBossBtn').style.pointerEvents = (bossesDefeated === 0 && unlockedLevel < 6) ? 'none' : '';
     }
 
-    function initGame(mode, level = 1) {
-        gameMode = mode; currentNivel = level;
-        gameState = 'PLAYING'; isPaused = false;
-        player.hp = player.maxHp; player.speedBoost = 0; zombies = []; bananas = []; 
-        spawnedCount = 0; processedCount = 0; frameCount = 0; infiniteWave = 1;
-        document.querySelectorAll('.modal-screen').forEach(s => s.style.display = 'none');
-        document.getElementById('pause-trigger').style.display = 'flex';
-        requestAnimationFrame(gameLoop);
+    // Mostrar/ocultar botón tutorial
+    const tutBtn = document.getElementById('tutorialBtn');
+    const lockMsg = document.getElementById('infinite-lock-msg');
+    if (locked) {
+        if (tutBtn) tutBtn.style.display = 'block';
+        if (lockMsg) lockMsg.innerHTML = '🔒 Completa el tutorial para desbloquear todo';
+    } else {
+        if (tutBtn) tutBtn.style.display = 'none';
+        if (lockMsg) lockMsg.innerText = unlockedLevel < 16 ? '♾️ Bloqueado: Completa Mundo 2' : '';
     }
+}
 
-    function gameLoop() {
-        if (gameState !== 'PLAYING' || isPaused) return;
-        update(); draw(); requestAnimationFrame(gameLoop);
+function selectDifficulty(diff) {
+    selectedDifficulty = diff;
+    document.getElementById('difficulty-screen').style.display = 'none';
+    if (pendingMode === 'LEVELS') {
+        document.getElementById('levels-screen').style.display='flex';
+        renderLevels();
+    } else {
+        initGame(pendingMode);
     }
+}
 
-    function winLevel() {
-        gameState = 'WIN';
-        if (currentNivel === unlockedLevel) {
-            unlockedLevel++; localStorage.setItem('banana_unlocked', unlockedLevel);
-            if (unlockedLevel > 15) checkAchievement(6);
-            if (unlockedLevel > 30) checkAchievement(16);
-            if (unlockedLevel >= 16) checkAchievement(7);
+function initGame(mode, level=1) {
+    gameMode=mode; currentNivel=level;
+    gameState='PLAYING'; isPaused=false;
+    player.hp=player.maxHp; player.speedBoost=0; player.dmgBoost=0; player.shielded=false;
+    zombies=[]; bananas=[]; particles=[]; trailParticles=[]; recentKills=[];
+    spawnedCount=0; processedCount=0; frameCount=0; infiniteWave=1;
+    survivalTimer=0; levelStartTime=Date.now(); levelDmgTaken=0;
+    combo=0; maxCombo=0; comboTimer=0; sessionKills=0;
+    boss=null; powerUpsAccepted=0;
+    if (mode !== 'TUTORIAL') {
+        totalGames++; localStorage.setItem('bs_total_games', totalGames);
+    }
+    document.querySelectorAll('.modal-screen').forEach(s => s.style.display='none');
+    document.getElementById('pause-trigger').style.display = mode === 'TUTORIAL' ? 'none' : 'flex';
+    document.getElementById('tutorial-hint').style.display = 'none';
+    requestAnimationFrame(gameLoop);
+    if (selectedDifficulty === 'NIGHTMARE') checkAchievement(27);
+}
+
+function gameLoop() {
+    if (gameState!=='PLAYING' || isPaused) return;
+    update(); draw(); requestAnimationFrame(gameLoop);
+}
+
+function winLevel() {
+    gameState='WIN';
+    if (currentNivel===unlockedLevel) {
+        unlockedLevel++; localStorage.setItem('bs_unlocked', unlockedLevel);
+        const worldIdx = Math.max(0, Math.floor((currentNivel-1)/15));
+        if (unlockedLevel > 15) checkAchievement(6);
+        if (unlockedLevel > 30) checkAchievement(16);
+        if (unlockedLevel > 45) checkAchievement(23);
+        if (unlockedLevel >= 16) checkAchievement(7);
+    }
+    totalWins++; localStorage.setItem('bs_total_wins', totalWins);
+    const diff = DIFF[selectedDifficulty];
+    const rewardCoins = Math.round(50 * diff.rewardMult);
+    coins += rewardCoins; saveCoins();
+    addXP(Math.round(100 * diff.xpMult));
+
+    // Sin daño
+    if (levelDmgTaken === 0) checkAchievement(15);
+
+    // Estrellas (1=vivo, 2=sin daño en 50%+, 3=perfecta)
+    const hpPct = player.hp / player.maxHp;
+    const stars = levelDmgTaken===0 ? 3 : hpPct >= 0.5 ? 2 : 1;
+    document.getElementById('victory-stars').innerText = '⭐'.repeat(stars) + '☆'.repeat(3-stars);
+
+    document.getElementById('victory-stats').innerHTML = `
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:#64748b;">Recompensa</span><span style="font-weight:900;color:#fbbf24;">+${rewardCoins} 🪙</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:#64748b;">Dificultad</span><span style="font-weight:900;">${selectedDifficulty}</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:#64748b;">Mejor combo</span><span style="font-weight:900;">x${maxCombo}</span></div>
+        <div style="display:flex;justify-content:space-between;"><span style="color:#64748b;">Daño recibido</span><span style="font-weight:900;color:${levelDmgTaken===0?'#4ade80':'#f97316'}">${levelDmgTaken===0?'NINGUNO':levelDmgTaken}</span></div>`;
+    document.getElementById('nextBtn').onclick = () => initGame('LEVELS', currentNivel+1);
+    document.getElementById('victory-screen').style.display='flex';
+}
+
+function gameOver() {
+    gameState='GAMEOVER'; checkAchievement(10);
+    const secs = Math.floor(survivalTimer/60);
+    document.getElementById('gameover-stats').innerHTML = `
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:#64748b;">Kills</span><span style="font-weight:900;">${sessionKills}</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:#64748b;">Mejor combo</span><span style="font-weight:900;">x${maxCombo}</span></div>
+        ${gameMode==='SURVIVAL'?`<div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:#64748b;">Tiempo</span><span style="font-weight:900;">${secs}s</span></div>`:''}
+        <div style="display:flex;justify-content:space-between;"><span style="color:#64748b;">Monedas</span><span style="font-weight:900;color:#fbbf24;">🪙 ${coins}</span></div>`;
+    document.getElementById('game-over-screen').style.display='flex';
+}
+
+function retryGame() { initGame(gameMode, currentNivel); }
+
+function togglePause() {
+    isPaused = !isPaused;
+    const el = document.getElementById('pause-screen');
+    if (isPaused) {
+        const elapsed = Math.floor((Date.now()-levelStartTime)/1000);
+        document.getElementById('pause-stats').innerHTML = `
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>Kills sesión</span><span style="font-weight:900;">${sessionKills}</span></div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>Combo máx</span><span style="font-weight:900;">x${maxCombo}</span></div>
+            <div style="display:flex;justify-content:space-between;"><span>Tiempo</span><span style="font-weight:900;">${elapsed}s</span></div>`;
+        el.style.display='flex';
+    } else { el.style.display='none'; requestAnimationFrame(gameLoop); }
+}
+
+// ============================
+// NIVELES
+// ============================
+const WORLD_DESCS = [
+    "Jardines Perdidos — Aprende a sobrevivir",
+    "El Desierto Ardiente — La velocidad es clave",
+    "Las Fauces del Infierno — Solo para valientes",
+];
+function renderLevels() {
+    const grid = document.getElementById('levels-grid');
+    grid.innerHTML = '';
+    document.getElementById('world-title').innerText = WORLD_DATA[currentMundoView-1].name;
+    document.getElementById('world-desc').innerText = WORLD_DESCS[currentMundoView-1] || '';
+    for (let i = 1; i <= 15; i++) {
+        const levelNum = ((currentMundoView-1)*15)+i;
+        const isUnlocked = levelNum <= unlockedLevel;
+        const btn = document.createElement('button');
+        btn.style.cssText = `width:38px;height:38px;border-radius:8px;font-size:10px;font-weight:900;cursor:${isUnlocked?'pointer':'not-allowed'};border:none;transition:all 0.2s;background:${isUnlocked?'linear-gradient(135deg,#f39c12,#e67e22)':'#1e293b'};color:${isUnlocked?'#1a1a2e':'#334155'};border:1px solid ${isUnlocked?'rgba(243,156,18,0.5)':'#334155'};`;
+        btn.innerText = i;
+        if (isUnlocked) btn.onclick = () => initGame('LEVELS', levelNum);
+        grid.appendChild(btn);
+    }
+}
+
+// ============================
+// PERSONALIZACIÓN APPLY
+// ============================
+function applyCustom() {
+    config.playerColor = document.getElementById('color-player').value;
+    config.zombieColor = document.getElementById('color-zombie').value;
+    config.baseColor   = document.getElementById('color-base').value;
+    config.playerName  = document.getElementById('player-name-input').value.trim() || 'Jugador';
+    localStorage.setItem('c_player', config.playerColor);
+    localStorage.setItem('c_zombie', config.zombieColor);
+    localStorage.setItem('c_base',   config.baseColor);
+    localStorage.setItem('c_name',   config.playerName);
+}
+
+function showOverlay() { document.getElementById('modal-overlay').style.display = 'block'; }
+function hideOverlay() { document.getElementById('modal-overlay').style.display = 'none'; }
+
+// ============================
+// MODAL
+// ============================
+function closeModal(id) {
+    if (id === 'custom-screen') applyCustom();
+    document.getElementById(id).style.display='none';
+    hideOverlay();
+    document.getElementById('main-menu-screen').style.display='flex';
+    updateLogrosNotif();
+}
+function openSupport() {
+    document.getElementById('main-menu-screen').style.display='none';
+    document.getElementById('support-screen').style.display='flex';
+}
+
+// ============================
+// TUTORIAL
+// ============================
+// Pasos del tutorial: cada uno muestra un hint en pantalla
+const TUTORIAL_STEPS = [
+    { kills: 0,  hint: "⬆️⬇️ Muévete con W/S o las flechas del teclado" },
+    { kills: 0,  hint: "ESPACIO para disparar 🍌 a los zombies", delay: 3000 },
+    { kills: 1,  hint: "¡Bien! Sigue eliminando zombies para avanzar" },
+    { kills: 3,  hint: "🔴 Los zombies rojos son MÁS rápidos, ¡cuidado!" },
+    { kills: 6,  hint: "❤️ Si un zombie llega a la base pierdes vida — ¡no los dejes pasar!" },
+    { kills: 10, hint: "🏆 ¡Casi! Elimina todos los zombies para completar el tutorial" },
+];
+let tutorialStep = 0;
+let tutorialHintTimer = null;
+
+function showTutorialHint(text, duration) {
+    const el = document.getElementById('tutorial-hint');
+    if (!el) return;
+    el.innerHTML = text;
+    el.style.display = 'block';
+    if (tutorialHintTimer) clearTimeout(tutorialHintTimer);
+    if (duration) {
+        tutorialHintTimer = setTimeout(() => { el.style.display = 'none'; }, duration);
+    }
+}
+
+function hideTutorialHint() {
+    const el = document.getElementById('tutorial-hint');
+    if (el) el.style.display = 'none';
+}
+
+function updateTutorialHints() {
+    if (gameMode !== 'TUTORIAL') return;
+    // Paso 0 y 1 son por tiempo (se lanzan al iniciar)
+    // El resto son por kills
+    if (tutorialStep === 2 && sessionKills >= 1) { tutorialStep = 3; showTutorialHint(TUTORIAL_STEPS[2].hint, 4000); }
+    if (tutorialStep === 3 && sessionKills >= 3) { tutorialStep = 4; showTutorialHint(TUTORIAL_STEPS[3].hint, 5000); }
+    if (tutorialStep === 4 && sessionKills >= 6) { tutorialStep = 5; showTutorialHint(TUTORIAL_STEPS[4].hint, 5000); }
+    if (tutorialStep === 5 && sessionKills >= 10) { tutorialStep = 6; showTutorialHint(TUTORIAL_STEPS[5].hint, 0); }
+}
+
+function startTutorial() {
+    tutorialStep = 0;
+    selectedDifficulty = 'EASY';
+    // Usar initGame con modo TUTORIAL (nivel especial 0)
+    initGame('TUTORIAL', 0);
+    // Mostrar hints iniciales por tiempo
+    showTutorialHint(TUTORIAL_STEPS[0].hint, 4000);
+    setTimeout(() => {
+        if (gameMode === 'TUTORIAL' && tutorialStep < 2) {
+            tutorialStep = 2;
+            showTutorialHint(TUTORIAL_STEPS[1].hint, 4000);
         }
-        coins += 50; saveCoins();
-        document.getElementById('victory-screen').style.display = 'flex';
-        document.getElementById('nextBtn').onclick = () => initGame('LEVELS', currentNivel + 1);
-    }
+    }, TUTORIAL_STEPS[1].delay || 4500);
+}
 
-    function gameOver() { gameState = 'GAMEOVER'; checkAchievement(10); document.getElementById('game-over-screen').style.display = 'flex'; }
-    function togglePause() { isPaused = !isPaused; document.getElementById('pause-screen').style.display = isPaused ? 'flex' : 'none'; if (!isPaused) gameLoop(); }
-    function exitToMenu() { location.reload(); }
-    
-    function closeModal(id) {
-        if (id === 'custom-screen') {
-            config.playerColor = document.getElementById('color-player').value;
-            config.zombieColor = document.getElementById('color-zombie').value;
-            config.baseColor = document.getElementById('color-base').value;
-            localStorage.setItem('c_player', config.playerColor); localStorage.setItem('c_zombie', config.zombieColor); localStorage.setItem('c_base', config.baseColor);
+function completeTutorial() {
+    tutorialDone = true;
+    localStorage.setItem('bs_tutorial_done', 'true');
+    hideTutorialHint();
+    checkAchievement(37);
+    gameState = 'TUTORIAL_DONE';
+    document.querySelectorAll('.modal-screen').forEach(s => s.style.display = 'none');
+    document.getElementById('pause-trigger').style.display = 'none';
+    document.getElementById('username-screen').style.display = 'flex';
+    // Foco en el input
+    setTimeout(() => {
+        const inp = document.getElementById('username-input');
+        if (inp) { inp.value = config.playerName !== 'Jugador' ? config.playerName : ''; inp.focus(); }
+    }, 100);
+}
+
+function confirmUsername() {
+    const inp = document.getElementById('username-input');
+    const name = inp ? inp.value.trim() : '';
+    config.playerName = name.length > 0 ? name : 'Jugador';
+    localStorage.setItem('c_name', config.playerName);
+    document.getElementById('username-screen').style.display = 'none';
+    goToMenu();
+}
+
+// Permitir confirmar con Enter
+document.addEventListener('DOMContentLoaded', () => {
+    const inp = document.getElementById('username-input');
+    if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter') confirmUsername(); });
+});
+
+// ============================
+// INPUT
+// ============================
+let keys = {};
+let shootCooldown = 0;
+window.onkeydown = (e) => {
+    keys[e.key] = true;
+    if (e.key === ' ' && gameState === 'PLAYING' && !isPaused) {
+        if (shootCooldown <= 0) {
+            bananas.push({ x: 88, y: player.y + 15 });
+            shootCooldown = 8;
         }
-        document.getElementById(id).style.display = 'none';
-        document.getElementById('main-menu-screen').style.display = 'flex';
     }
-
-    let keys = {};
-    window.onkeydown = (e) => {
-        keys[e.key] = true;
-        if (e.key === ' ' && gameState === 'PLAYING' && !isPaused) bananas.push({x: 80, y: player.y + 15});
-        if (e.key === 'p' || e.key === 'Escape') togglePause();
-    };
-    window.onkeyup = (e) => keys[e.key] = false;
-
-    // BOTONES NAVEGACIÓN
-    document.getElementById('modeLevelsBtn').onclick = () => { document.getElementById('main-menu-screen').style.display = 'none'; document.getElementById('levels-screen').style.display = 'flex'; renderLevels(); };
-    document.getElementById('openShopMenuBtn').onclick = () => { document.getElementById('main-menu-screen').style.display = 'none'; document.getElementById('shop-screen').style.display = 'flex'; renderShop(); };
-    document.getElementById('openAchievementsBtn').onclick = () => { document.getElementById('main-menu-screen').style.display = 'none'; document.getElementById('achievements-screen').style.display = 'flex'; renderAchievements(); };
-    document.getElementById('openCustomBtn').onclick = () => { document.getElementById('main-menu-screen').style.display = 'none'; document.getElementById('custom-screen').style.display = 'flex'; };
-    document.getElementById('modeInfiniteBtn').onclick = () => { if(unlockedLevel >= 16) initGame('INFINITE'); };
-
-    function renderLevels() {
-        const grid = document.getElementById('levels-grid'); grid.innerHTML = '';
-        document.getElementById('world-title').innerText = `Mundo ${currentMundoView}`;
-        for (let i = 1; i <= 15; i++) {
-            const levelNum = ((currentMundoView - 1) * 15) + i;
-            const btn = document.createElement('button');
-            btn.className = `w-10 h-10 rounded text-[10px] font-bold ${levelNum <= unlockedLevel ? 'bg-yellow-500' : 'bg-slate-700 opacity-50'}`;
-            btn.innerText = i;
-            if (levelNum <= unlockedLevel) btn.onclick = () => initGame('LEVELS', levelNum);
-            grid.appendChild(btn);
-        }
+    // ESC y P solo funcionan si hay una partida activa (PLAYING o PAUSED)
+    if (e.key === 'p' || e.key === 'Escape') {
+        if (gameState === 'PLAYING' || isPaused) togglePause();
     }
+};
+window.onkeyup = (e) => { keys[e.key]=false; };
+setInterval(() => { if (shootCooldown>0) shootCooldown--; }, 16);
 
-    document.getElementById('prevWorld').onclick = () => { if(currentMundoView > 1) { currentMundoView--; renderLevels(); } };
-    document.getElementById('nextWorld').onclick = () => { if(currentMundoView < 3) { currentMundoView++; renderLevels(); } };
-    
-    document.getElementById('buyHealBtn').onclick = () => { if(coins >= 30) { coins -= 30; player.hp = player.maxHp; shopActivity.upgrade = true; checkShopAchievements(); saveCoins(); renderShop(); } };
-    document.getElementById('buyMaxHealthBtn').onclick = () => { if(coins >= 50) { coins -= 50; player.maxHp += 25; player.hp = player.maxHp; shopActivity.upgrade = true; checkShopAchievements(); checkAchievement(14); saveCoins(); renderShop(); } };
+// Touch / móvil
+let touchStart = null;
+canvas.addEventListener('touchstart', e => { touchStart = e.touches[0]; }, { passive:true });
+canvas.addEventListener('touchmove', e => {
+    if (!touchStart || gameState!=='PLAYING') return;
+    const dy = e.touches[0].clientY - touchStart.clientY;
+    player.y = Math.max(0, Math.min(canvas.height-35, player.y + dy*0.5));
+    touchStart = e.touches[0];
+}, { passive:true });
+canvas.addEventListener('touchend', () => {
+    if (gameState==='PLAYING' && !isPaused) bananas.push({x:88, y:player.y+15});
+});
 
+// ============================
+// MENÚ BOTONES
+// ============================
+function openModeWithDifficulty(mode) {
+    pendingMode = mode;
+    document.getElementById('main-menu-screen').style.display='none';
+    document.getElementById('difficulty-screen').style.display='flex';
+    trackMenuSection('difficulty');
+}
+document.getElementById('modeLevelsBtn').onclick   = () => openModeWithDifficulty('LEVELS');
+document.getElementById('modeInfiniteBtn').onclick = () => { if(unlockedLevel>=16) openModeWithDifficulty('INFINITE'); };
+document.getElementById('modeSurvivalBtn').onclick = () => openModeWithDifficulty('SURVIVAL');
+document.getElementById('modeBossBtn').onclick     = () => { if(unlockedLevel>=6||bossesDefeated>0) openModeWithDifficulty('BOSS'); };
+
+document.getElementById('openShopMenuBtn').onclick = () => {
+    document.getElementById('main-menu-screen').style.display='none';
+    showOverlay();
+    document.getElementById('shop-screen').style.display='flex';
+    currentShopTab='skins'; renderShop();
+    trackMenuSection('shop');
+};
+document.getElementById('openAchievementsBtn').onclick = () => {
+    document.getElementById('main-menu-screen').style.display='none';
+    showOverlay();
+    document.getElementById('achievements-screen').style.display='flex';
+    renderAchievements();
+    trackMenuSection('achievements');
+};
+document.getElementById('openCustomBtn').onclick = () => {
+    document.getElementById('main-menu-screen').style.display='none';
+    showOverlay();
+    document.getElementById('custom-screen').style.display='flex';
+    renderCustom();
+    trackMenuSection('custom');
+};
+document.getElementById('openStatsBtn').onclick = () => {
+    document.getElementById('main-menu-screen').style.display='none';
+    showOverlay();
+    document.getElementById('stats-screen').style.display='flex';
+    renderStats();
+    trackMenuSection('stats');
+};
+document.getElementById('prevWorld').onclick = () => { if(currentMundoView>1){ currentMundoView--; renderLevels(); } };
+document.getElementById('nextWorld').onclick = () => { if(currentMundoView<3){ currentMundoView++; renderLevels(); } };
+
+function trackMenuSection(name) {
+    menuSectionsOpened.add(name);
+    if (menuSectionsOpened.size >= 5) checkAchievement(36);
+}
+
+// ============================
+// INIT
+// ============================
+updateLogrosNotif();
+updateXPBar();
+
+if (!tutorialDone) {
+    // Primera vez: lanzar tutorial directamente
+    checkDailyReward();
+    startTutorial();
+} else {
+    // Ya jugó antes: mostrar menú normal
+    checkDailyReward();
+    applyTutorialLock();
+}
 </script>
 </body>
 </html>
